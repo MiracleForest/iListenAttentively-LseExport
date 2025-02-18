@@ -1,25 +1,27 @@
 {
     "format_version": 2,
-    "tooth": "my-mod",
-    "version": "0.0.0",
+    "tooth": "github.com/MiracleForest/iListenAttentively-LseExport",
+    "version": "0.1.0",
     "info": {
-        "name": "My Mod Name",
-        "description": "My Mod Description",
-        "author": "My Name",
+        "name": "iListenAttentively-LseExport",
+        "description": "Export events to LegacyScriptEngine",
+        "author": "MiracleForest",
+        "source": "github.com/MiracleForest/iListenAttentively-LseExport",
         "tags": [
-            "platform:levilamina",
-            "type:mod"
+            "levilamina",
+            "event"
         ]
     },
-    "asset_url": "My Asset Url",
+    "asset_url": "https://github.com/MiracleForest/iListenAttentively-LseExport/releases/download/v$(version)/iListenAttentively-LseExport-windows-x64.zip",
     "prerequisites": {
-        "github.com/LiteLDev/LeviLamina": "My LeviLamina Dependency Version"
+        "github.com/LiteLDev/LeviLamina": ">=1.0.0",
+        "github.com/LiteLDev/LegacyRemoteCall": ">=0.9.0"
     },
     "files": {
         "place": [
             {
-                "src": "my-mod/*",
-                "dest": "plugins/my-mod/"
+                "src": "iListenAttentively/*",
+                "dest": "plugins/iListenAttentively/"
             }
         ]
     }

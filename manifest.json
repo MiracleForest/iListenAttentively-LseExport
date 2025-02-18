@@ -2,5 +2,12 @@
     "name": "${modName}",
     "entry": "${modFile}",
     "version": "${modVersion}",
-    "type": "native"
+    "type": "native",
+    "author": "MiracleForest",
+    "description": "Export events to LegacyScriptEngine",
+    "dependencies": [
+        {
+            "name": "LegacyRemoteCall"
+        }
+    ]
 }

@@ -1,35 +1,21 @@
-# LeviLamina Mod Template
+# iListenAttentively-LseExport
 
-A LeviLamina mod template
+![iListenAttentively-LseExport](https://socialify.git.ci/MiracleForest/iListenAttentively-LseExport/image?description=1&descriptionEditable=A%20rich%20and%20modern%20LeviLamina%20Minecraft%20event%20library&font=Raleway&forks=1&issues=1&language=1&name=1&owner=1&pattern=Circuit%20Board&pulls=1&stargazers=1&theme=Auto)
 
-This mod is a template for developing LeviLamina mods.
+![English](https://img.shields.io/badge/English-inactive?style=for-the-badge)
+[![中文](https://img.shields.io/badge/简体中文-informational?style=for-the-badge)](README.zh.md)
 
 ## Install
 
-Generate a new repository from this template.
-
 ## Usage
 
-Before using this mod template, make sure that you have installed XMake and a Minecraft Bedrock Server with LeviLamina.
 
-1. Clone the new repository into a local folder.
+## Contributors
 
-1. Change the mod name and the expected LeviLamina version in `xmake.lua`.
+This project exists thanks to all the people who contribute.
 
-1. Add your code.
-
-1. Run `xmake repo -u` in the root of the repository.
-
-1. Run `xmake` to build the mod.
-
-Now the build is complete at `bin/`.
-
-## Contributing
-
-Ask questions by creating an issue.
-
-PRs accepted.
+![Contributors](https://contrib.rocks/image?repo=MiracleForest/iListenAttentively-LseExport)
 
 ## License
 
-CC0-1.0 © LiteLDev
+Copyright © 2024 MiracleForest, All rights reserved.

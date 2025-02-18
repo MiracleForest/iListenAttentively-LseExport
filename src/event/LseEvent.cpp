@@ -1,0 +1,28 @@
+#pragma once
+#include "LseEvent.h"
+#include <ll/api/event/Emitter.h>
+#include <mc/nbt/CompoundTag.h>
+
+namespace ila::event {
+
+void LseEvent::serialize(CompoundTag& nbt) const {
+    if (!getData()) return;
+    for (auto& [key, value] : *getData()) {
+        if (key == "eventId") continue;
+        nbt[key] = value;
+    }
+}
+
+void LseEvent::deserialize(CompoundTag const& nbt) {
+    if (!getData()) return;
+    for (auto& [key, value] : nbt) {
+        if (key == "eventId") continue;
+        (*getData())[key] = value;
+    }
+}
+
+CompoundTag* LseEvent::getData() const { return mData; }
+
+class LseEventEmitter : public ll::event::Emitter<[](auto&&...) { return nullptr; }, LseEvent> {};
+
+} // namespace ila::event
