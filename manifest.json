@@ -5,6 +5,7 @@
     "type": "native",
     "author": "MiracleForest",
     "description": "Export events to LegacyScriptEngine",
+    "passive": true,
     "dependencies": [
         {
             "name": "LegacyRemoteCall"
