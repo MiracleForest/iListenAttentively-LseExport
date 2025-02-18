@@ -99,9 +99,9 @@ export function emplaceListener(
         event: NbtCompound
     ) => void,
     /** 事件优先级 */
-    priority: EventPriority.Normal,
+    priority: EventPriority.Normal = EventPriority.Normal,
     /** 模组名 */
-    modName: string | undefined
+    modName: string | undefined = getPluginName()
 ): ListenerId;
 
 /** 根据玩家信息获取玩家(用于事件回调) */
