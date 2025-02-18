@@ -20,8 +20,8 @@
     "files": {
         "place": [
             {
-                "src": "iListenAttentively/*",
-                "dest": "plugins/iListenAttentively/"
+                "src": "iListenAttentively-LseExport/*",
+                "dest": "plugins/iListenAttentively-LseExport/"
             }
         ]
     }
