@@ -89,6 +89,10 @@ export function publish(
     modName: string
 ): void;
 
+interface EventListenerData extends NbtCompound extends NbtList {
+    [key: string | number]: EventListenerData | undefined;
+}
+
 /** 安装事件监听(需事件注册后安装) */
 export function emplaceListener(
     /** 事件名 */
@@ -96,7 +100,7 @@ export function emplaceListener(
     /** 回调函数 */
     callback: (
         /** 事件数据 */
-        event: NbtCompound
+        event: EventListenerData
     ) => void,
     /** 事件优先级 */
     priority: EventPriority.Normal = EventPriority.Normal,

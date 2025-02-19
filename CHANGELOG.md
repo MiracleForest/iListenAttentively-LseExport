@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Change
 
 - Deleted the type detection of the getPlayer and getEntity interfaces @zimuya4153
+- Enhanced listening callback completion @zimuya4153
 
 
 ## [0.1.0] - 2024-2-18
