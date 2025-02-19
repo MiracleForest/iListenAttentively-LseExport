@@ -6,6 +6,7 @@
 namespace ila::event {
 
 void LseEvent::serialize(CompoundTag& nbt) const {
+    Cancellable::serialize(nbt);
     if (!getData()) return;
     for (auto& [key, value] : *getData()) {
         if (key == "eventId") continue;
@@ -14,6 +15,7 @@ void LseEvent::serialize(CompoundTag& nbt) const {
 }
 
 void LseEvent::deserialize(CompoundTag const& nbt) {
+    Cancellable::deserialize(nbt);
     if (!getData()) return;
     for (auto& [key, value] : nbt) {
         if (key == "eventId") continue;

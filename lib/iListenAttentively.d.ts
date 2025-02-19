@@ -59,7 +59,7 @@ export function hasListener(
 ): boolean;
 
 /** 
- * 注册事件(需在插件加载完后注册)
+ * 注册事件(需在自身插件加载完后注册)
  * @description 请务必在事件名前面加一些信息用于区分   
  * 例如：`"pluginName::eventName"`   
  * 如需要分类，可以使用`"pluginName::category::eventName"`   
