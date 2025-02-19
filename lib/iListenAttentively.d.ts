@@ -91,6 +91,7 @@ export function publish(
 
 interface EventListenerData extends NbtCompound extends NbtList {
     [key: string | number]: EventListenerData | undefined;
+    [Symbol.iterator]: () => Iterator<[string | number, EventListenerData]>;
 }
 
 /** 安装事件监听(需事件注册后安装) */
@@ -108,14 +109,44 @@ export function emplaceListener(
     modName: string | undefined = getPluginName()
 ): ListenerId;
 
-/** 根据玩家信息获取玩家(用于事件回调) */
+/** 根据指针地址获取玩家 */
 export function getPlayer(
     /** 玩家信息 */
     info: NbtCompound
 ): Player | undefined;
 
-/** 根据实体信息获取实体(用于事件回调) */
+/** 根据指针地址获取实体 */
 export function getEntity(
     /** 实体信息 */
     info: NbtCompound
 ): Entity | undefined;
+
+/** 根据指针地址获取物品 */
+export function getItem(
+    /** 实体信息 */
+    info: NbtCompound
+): Item | undefined;
+
+/** 根据指针地址获取方块 */
+export function getBlock(
+    /** 实体信息 */
+    info: NbtCompound
+): Block | undefined;
+
+/** 根据指针地址获取方块实体 */
+export function getBlockEntity(
+    /** 实体信息 */
+    info: NbtCompound
+): BlockEntity | undefined;
+
+/** 根据指针地址获取容器 */
+export function getContainer(
+    /** 实体信息 */
+    info: NbtCompound
+): Container | undefined;
+
+declare let nbtProxyHandler: ProxyHandler<any>;
+
+interface NbtList {
+    toSNBT(index = -1): string;
+}

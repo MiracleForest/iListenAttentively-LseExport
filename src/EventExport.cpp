@@ -7,6 +7,14 @@
 #include <ll/api/mod/ModManagerRegistry.h>
 #include <ll/api/utils/ErrorUtils.h>
 
+#define GET_INSTANCE_MACRO(EXPORT_NAME, CLASS_NAME)                                                                    \
+    RemoteCall::exportAs("iListenAttentively", EXPORT_NAME, [](CompoundTag* info) -> CLASS_NAME* {                     \
+        if (info && ll::event::isEventSerializedObj(*info) && (*info)["_pointer_"].getId() == Tag::Type::Int64) {      \
+            return (CLASS_NAME*)((uintptr_t)((*info)["_pointer_"].get<Int64Tag>()));                                   \
+        }                                                                                                              \
+        return nullptr;                                                                                                \
+    });
+
 namespace ila {
 
 void exportEvent() {
@@ -76,18 +84,6 @@ void exportEvent() {
             ll::event::EventBus::getInstance().publish(modName, event, ll::event::EventIdView(eventName));
         }
     );
-    RemoteCall::exportAs("iListenAttentively", "getPlayer", [](CompoundTag* info) -> Player* {
-        if (info && ll::event::isEventSerializedObj(*info)) {
-            return (Player*)((uintptr_t)((*info)["_pointer_"].get<Int64Tag>()));
-        }
-        return nullptr;
-    });
-    RemoteCall::exportAs("iListenAttentively", "getEntity", [](CompoundTag* info) -> Actor* {
-        if (info && ll::event::isEventSerializedObj(*info)) {
-            return (Actor*)((uintptr_t)((*info)["_pointer_"].get<Int64Tag>()));
-        }
-        return nullptr;
-    });
     RemoteCall::exportAs(
         "iListenAttentively",
         "emplaceListener",
@@ -126,5 +122,12 @@ void exportEvent() {
             return ULLONG_MAX;
         }
     );
+
+    GET_INSTANCE_MACRO("getPlayer", Player);
+    GET_INSTANCE_MACRO("getEntity", Actor);
+    GET_INSTANCE_MACRO("getItem", ItemStack);
+    GET_INSTANCE_MACRO("getBlock", Block);
+    GET_INSTANCE_MACRO("getBlockEntity", BlockActor);
+    GET_INSTANCE_MACRO("getContainer", Container);
 }
 } // namespace ila
