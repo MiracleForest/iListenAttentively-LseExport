@@ -76,22 +76,14 @@ void exportEvent() {
             ll::event::EventBus::getInstance().publish(modName, event, ll::event::EventIdView(eventName));
         }
     );
-    RemoteCall::exportAs(
-        "iListenAttentively",
-        "getPlayer",
-        [](CompoundTag* info) -> Player* {
-            if (!info) return nullptr;
-            if (ll::event::isEventSerializedObj(*info) && ((*info)["_type_"] == "Player" || (*info)["_type_"] == "ServerPlayer")) {
-                return (Player*)((uintptr_t)((*info)["_pointer_"].get<Int64Tag>()));
-            }
-            return nullptr;
+    RemoteCall::exportAs("iListenAttentively", "getPlayer", [](CompoundTag* info) -> Player* {
+        if (info && ll::event::isEventSerializedObj(*info)) {
+            return (Player*)((uintptr_t)((*info)["_pointer_"].get<Int64Tag>()));
         }
-    );
+        return nullptr;
+    });
     RemoteCall::exportAs("iListenAttentively", "getEntity", [](CompoundTag* info) -> Actor* {
-        if (!info) return nullptr;
-        if (ll::event::isEventSerializedObj(*info)
-            && ((*info)["_type_"] == "Actor" || (*info)["_type_"] == "Mob" || (*info)["_type_"] == "Player"
-                || (*info)["_type_"] == "ServerPlayer" || (*info)["_type_"] == "ItemActor")) {
+        if (info && ll::event::isEventSerializedObj(*info)) {
             return (Actor*)((uintptr_t)((*info)["_pointer_"].get<Int64Tag>()));
         }
         return nullptr;
