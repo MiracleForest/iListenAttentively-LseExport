@@ -109,39 +109,75 @@ export function emplaceListener(
     modName: string | undefined = getPluginName()
 ): ListenerId;
 
-/** 根据指针地址获取玩家 */
+/** 根据内存地址获取玩家 */
 export function getPlayer(
-    /** 玩家信息 */
+    /** 地址 */
+    info: number
+): Player | undefined;
+
+/** 根据内存地址获取实体 */
+export function getEntity(
+    /** 地址 */
+    info: number
+): Entity | undefined;
+
+/** 根据内存地址获取物品 */
+export function getItem(
+    /** 地址 */
+    info: number
+): Item | undefined;
+
+/** 根据内存地址获取方块 */
+export function getBlock(
+    /** 地址 */
+    info: number
+): Block | undefined;
+
+/** 根据内存地址获取方块实体 */
+export function getBlockEntity(
+    /** 地址 */
+    info: number
+): BlockEntity | undefined;
+
+/** 根据内存地址获取容器 */
+export function getContainer(
+    /** 地址 */
+    info: number
+): Container | undefined;
+
+/** 根据根据序列化信息获取玩家 */
+export function getPlayer(
+    /** 序列化信息 */
     info: NbtCompound
 ): Player | undefined;
 
-/** 根据指针地址获取实体 */
+/** 根据序列化信息获取实体 */
 export function getEntity(
-    /** 实体信息 */
+    /** 序列化信息 */
     info: NbtCompound
 ): Entity | undefined;
 
-/** 根据指针地址获取物品 */
+/** 根据序列化信息获取物品 */
 export function getItem(
-    /** 实体信息 */
+    /** 序列化信息 */
     info: NbtCompound
 ): Item | undefined;
 
-/** 根据指针地址获取方块 */
+/** 根据序列化信息获取方块 */
 export function getBlock(
-    /** 实体信息 */
+    /** 序列化信息 */
     info: NbtCompound
 ): Block | undefined;
 
-/** 根据指针地址获取方块实体 */
+/** 根据序列化信息获取方块实体 */
 export function getBlockEntity(
-    /** 实体信息 */
+    /** 序列化信息 */
     info: NbtCompound
 ): BlockEntity | undefined;
 
-/** 根据指针地址获取容器 */
+/** 根据序列化信息获取容器 */
 export function getContainer(
-    /** 实体信息 */
+    /** 序列化信息 */
     info: NbtCompound
 ): Container | undefined;
 
@@ -149,4 +185,25 @@ declare let nbtProxyHandler: ProxyHandler<any>;
 
 interface NbtList {
     toSNBT(index = -1): string;
+}
+interface NbtByte {
+    toSNBT(): string;
+}
+interface NbtDouble {
+    toSNBT(): string;
+}
+interface NbtFloat {
+    toSNBT(): string;
+}
+interface NbtLong {
+    toSNBT(): string;
+}
+interface NbtInt {
+    toSNBT(): string;
+}
+interface NbtShort {
+    toSNBT(): string;
+}
+interface NbtString {
+    toSNBT(): string;
 }

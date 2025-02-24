@@ -14,6 +14,6 @@ public:
     void deserialize(CompoundTag const& nbt) override;
 
     CompoundTag* getData() const;
-}; // class MoneyChangEvent
+};
 
-} // namespace ila::lse
+} // namespace ila::event
