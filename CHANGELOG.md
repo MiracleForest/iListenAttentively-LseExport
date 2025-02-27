@@ -8,13 +8,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.3] - 2024-02-27
+
+### Added
+
+- Added some get function @zimuya4153
+
+### Change
+
+- Optimized some get functions @zimuya4153
+
+### Fixed
+
+- Fixed the NbtList toSNBT format error @zimuya4153
+
+
 ## [0.1.2] - 2024-02-24
 
 ### Added
 
 - Adapted to LeviLamina 1.1.0-rc.1 @zimuya4153
 - Added some get function @zimuya4153
-- Added toSNBT method to NBT @zimuya4153s
+- Added toSNBT method to NBT @zimuya4153
 
 
 ## [0.1.1] - 2024-2-19

@@ -7,9 +7,27 @@
 #include <ll/api/mod/ModManagerRegistry.h>
 #include <ll/api/utils/ErrorUtils.h>
 
-#define GET_INSTANCE_MACRO(EXPORT_NAME, CLASS_NAME)                                                                    \
-    RemoteCall::exportAs("iListenAttentively", EXPORT_NAME, [](uintptr_t info) -> CLASS_NAME* {                        \
-        return reinterpret_cast<CLASS_NAME*>(info);                                                                    \
+#define GET_INSTANCE_BASE_MACRO(EXPORT_NAME, CLASS_NAME, RETURN, ERROR_RETURN)                                         \
+    RemoteCall::exportAs("iListenAttentively", EXPORT_NAME, [](uintptr_t info) -> CLASS_NAME {                         \
+        try {                                                                                                          \
+            RETURN;                                                                                                    \
+        } catch (...) {                                                                                                \
+            ll::error_utils::printCurrentException(LseExport::getInstance().getSelf().getLogger());                    \
+            ERROR_RETURN;                                                                                              \
+        }                                                                                                              \
+    });
+
+#define GET_INSTANCE_MACRO(CLASS_NAME)                                                                                 \
+    GET_INSTANCE_BASE_MACRO("get" #CLASS_NAME, CLASS_NAME*, return reinterpret_cast<CLASS_NAME*>(info), return nullptr)
+
+#define GET_ADDRESS_MACRO(CLASS_NAME)                                                                                  \
+    RemoteCall::exportAs("iListenAttentively", "get" #CLASS_NAME "Address", [](CLASS_NAME* target) -> uintptr_t {      \
+        try {                                                                                                          \
+            return reinterpret_cast<uintptr_t>(target);                                                                \
+        } catch (...) {                                                                                                \
+            ll::error_utils::printCurrentException(LseExport::getInstance().getSelf().getLogger());                    \
+            return 0;                                                                                                  \
+        }                                                                                                              \
     });
 
 namespace ila {
@@ -120,11 +138,25 @@ void exportEvent() {
         }
     );
 
-    GET_INSTANCE_MACRO("getPlayer", Player);
-    GET_INSTANCE_MACRO("getEntity", Actor);
-    GET_INSTANCE_MACRO("getItem", ItemStack);
-    GET_INSTANCE_MACRO("getBlock", Block);
-    GET_INSTANCE_MACRO("getBlockEntity", BlockActor);
-    GET_INSTANCE_MACRO("getContainer", Container);
+    GET_INSTANCE_MACRO(Player);
+    GET_INSTANCE_MACRO(Actor);
+    GET_INSTANCE_MACRO(ItemStack);
+    GET_INSTANCE_MACRO(Block);
+    GET_INSTANCE_MACRO(BlockActor);
+    GET_INSTANCE_MACRO(Container);
+    GET_INSTANCE_MACRO(CompoundTag);
+    GET_INSTANCE_BASE_MACRO("getNumber", int64_t, return *reinterpret_cast<int64_t*>(info), return 0);
+    GET_INSTANCE_BASE_MACRO("getFloat", double, return *reinterpret_cast<double*>(info), return 0);
+    GET_INSTANCE_BASE_MACRO("getBoolean", bool, return *reinterpret_cast<bool*>(info), return 0);
+    GET_INSTANCE_BASE_MACRO("getString", std::string, return *reinterpret_cast<std::string*>(info), return "");
+    GET_INSTANCE_BASE_MACRO("getRawAddress", uintptr_t, return *reinterpret_cast<uintptr_t*>(info), return 0);
+
+    GET_ADDRESS_MACRO(Player);
+    GET_ADDRESS_MACRO(Actor);
+    GET_ADDRESS_MACRO(ItemStack);
+    GET_ADDRESS_MACRO(Block const);
+    GET_ADDRESS_MACRO(BlockActor);
+    GET_ADDRESS_MACRO(Container);
+    GET_ADDRESS_MACRO(CompoundTag);
 }
 } // namespace ila

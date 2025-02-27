@@ -92,6 +92,8 @@ export function publish(
 interface EventListenerData extends NbtCompound extends NbtList {
     [key: string | number]: EventListenerData | undefined;
     [Symbol.iterator]: () => Iterator<[string | number, EventListenerData]>;
+
+    toSNBT(index = -1): string;
 }
 
 /** 安装事件监听(需事件注册后安装) */
@@ -109,77 +111,82 @@ export function emplaceListener(
     modName: string | undefined = getPluginName()
 ): ListenerId;
 
-/** 根据内存地址获取玩家 */
+/** 根据内存地址/序列化信息获取玩家 */
 export function getPlayer(
-    /** 地址 */
-    info: number
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
 ): Player | undefined;
 
-/** 根据内存地址获取实体 */
-export function getEntity(
-    /** 地址 */
-    info: number
+/** 根据内存地址/序列化信息获取实体 */
+export function getActor(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
 ): Entity | undefined;
 
-/** 根据内存地址获取物品 */
-export function getItem(
-    /** 地址 */
-    info: number
+/** 根据内存地址/序列化信息获取物品 */
+export function getItemStack(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
 ): Item | undefined;
 
-/** 根据内存地址获取方块 */
+/** 根据内存地址/序列化信息获取方块 */
 export function getBlock(
-    /** 地址 */
-    info: number
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
 ): Block | undefined;
 
-/** 根据内存地址获取方块实体 */
-export function getBlockEntity(
-    /** 地址 */
-    info: number
+/** 根据内存地址/序列化信息获取方块实体 */
+export function getBlockActor(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
 ): BlockEntity | undefined;
 
-/** 根据内存地址获取容器 */
+/** 根据内存地址/序列化信息获取容器 */
 export function getContainer(
-    /** 地址 */
-    info: number
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
 ): Container | undefined;
 
-/** 根据根据序列化信息获取玩家 */
-export function getPlayer(
-    /** 序列化信息 */
-    info: NbtCompound
-): Player | undefined;
+/** 根据内存地址/序列化信息获取NBT */
+export function getCompoundTag(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
+): NbtCompound | undefined;
 
-/** 根据序列化信息获取实体 */
-export function getEntity(
-    /** 序列化信息 */
-    info: NbtCompound
-): Entity | undefined;
+/** 根据内存地址/序列化信息获取数字 */
+export function getNumber(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
+): Number;
 
-/** 根据序列化信息获取物品 */
-export function getItem(
-    /** 序列化信息 */
-    info: NbtCompound
-): Item | undefined;
+/** 根据内存地址/序列化信息获取浮点数 */
+export function getFloat(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
+): Number;
 
-/** 根据序列化信息获取方块 */
-export function getBlock(
-    /** 序列化信息 */
-    info: NbtCompound
-): Block | undefined;
+/** 根据内存地址/序列化信息获取布尔值 */
+export function getBoolean(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
+): Boolean;
 
-/** 根据序列化信息获取方块实体 */
-export function getBlockEntity(
-    /** 序列化信息 */
-    info: NbtCompound
-): BlockEntity | undefined;
+/** 根据内存地址/序列化信息获取字符串 */
+export function getString(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
+): String;
 
-/** 根据序列化信息获取容器 */
-export function getContainer(
-    /** 序列化信息 */
-    info: NbtCompound
-): Container | undefined;
+/** 根据内存地址/序列化信息获取指针原始地址 */
+export function getRawAddress(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
+): number | undefined;
+
+/** 获取实体/玩家/物品/方块/方块实体/容器/NBT地址 */
+export function getAddress(
+    target: Entity | Player | Item | Block | BlockEntity | Container | CompoundTag
+): number | undefined;
 
 declare let nbtProxyHandler: ProxyHandler<any>;
 
