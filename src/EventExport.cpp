@@ -7,11 +7,14 @@
 #include <ll/api/mod/ModManagerRegistry.h>
 #include <ll/api/utils/ErrorUtils.h>
 
+#define EXPORT_NAMESPACE "iListenAttentively"
+
 #define EXPORT_FUNCTION_MACRO(EXPORT_NAME, CLASS_NAME, RETURN, ERROR_RETURN, ...)                                      \
-    RemoteCall::exportAs("iListenAttentively", EXPORT_NAME, [](__VA_ARGS__) -> CLASS_NAME {                            \
+    RemoteCall::exportAs(EXPORT_NAMESPACE, EXPORT_NAME, [](__VA_ARGS__) -> CLASS_NAME {                                \
         try {                                                                                                          \
             RETURN;                                                                                                    \
         } catch (...) {                                                                                                \
+            LseExport::getInstance().getSelf().getLogger().error("Failed to call " EXPORT_NAMESPACE "::" EXPORT_NAME); \
             ll::error_utils::printCurrentException(LseExport::getInstance().getSelf().getLogger());                    \
             ERROR_RETURN;                                                                                              \
         }                                                                                                              \
@@ -57,15 +60,17 @@
 
 namespace ila {
 
+extern std::unordered_map<std::string, std::string> mEventNameAlias;
+
 void exportEvent() {
-    RemoteCall::exportAs("iListenAttentively", "removeListener", [](ll::event::ListenerId eventId) -> bool {
+    RemoteCall::exportAs(EXPORT_NAMESPACE, "removeListener", [](ll::event::ListenerId eventId) -> bool {
         return ll::event::EventBus::getInstance().removeListener(eventId);
     });
-    RemoteCall::exportAs("iListenAttentively", "hasListener", [](ll::event::ListenerId eventId) -> bool {
+    RemoteCall::exportAs(EXPORT_NAMESPACE, "hasListener", [](ll::event::ListenerId eventId) -> bool {
         return ll::event::EventBus::getInstance().hasListener(eventId);
     });
     RemoteCall::exportAs(
-        "iListenAttentively",
+        EXPORT_NAMESPACE,
         "getAllEvent",
         []() -> std::vector<std::unordered_map<std::string, std::string>> {
             std::vector<std::unordered_map<std::string, std::string>> result;
@@ -79,7 +84,7 @@ void exportEvent() {
         }
     );
     RemoteCall::exportAs(
-        "iListenAttentively",
+        EXPORT_NAMESPACE,
         "getAllEventFromModName",
         [](std::string modName) -> std::vector<std::string> {
             std::vector<std::string> result;
@@ -89,34 +94,26 @@ void exportEvent() {
             return result;
         }
     );
-    RemoteCall::exportAs("iListenAttentively", "hasEvent", [](std::string eventName) -> bool {
+    RemoteCall::exportAs(EXPORT_NAMESPACE, "hasEvent", [](std::string eventName) -> bool {
         return ll::event::EventBus::getInstance().hasEvent(ll::event::EventIdView(eventName));
     });
-    RemoteCall::exportAs("iListenAttentively", "getListenerCount", [](std::string eventName) -> size_t {
+    RemoteCall::exportAs(EXPORT_NAMESPACE, "getListenerCount", [](std::string eventName) -> size_t {
         return ll::event::EventBus::getInstance().getListenerCount(ll::event::EventIdView(eventName));
     });
-    RemoteCall::exportAs(
-        "iListenAttentively",
-        "RegisterEvent",
-        [](std::string pluginName, std::string eventName) -> bool {
-            if (auto mod = ll::mod::ModManagerRegistry::getInstance().getMod(pluginName)) {
-                return ll::event::EventBus::getInstance()
-                    .setEventEmitter([](auto&&...) { return nullptr; }, ll::event::EventIdView(eventName), mod);
-            }
-            return false;
+    RemoteCall::exportAs(EXPORT_NAMESPACE, "RegisterEvent", [](std::string pluginName, std::string eventName) -> bool {
+        if (auto mod = ll::mod::ModManagerRegistry::getInstance().getMod(pluginName)) {
+            return ll::event::EventBus::getInstance()
+                .setEventEmitter([](auto&&...) { return nullptr; }, ll::event::EventIdView(eventName), mod);
         }
-    );
+        return false;
+    });
+    RemoteCall::exportAs(EXPORT_NAMESPACE, "publish", [](std::string eventName, CompoundTag* data) -> void {
+        if (!data) return;
+        auto event = event::LseEvent(data);
+        ll::event::EventBus::getInstance().publish(event, ll::event::EventIdView(eventName));
+    });
     RemoteCall::exportAs(
-        "iListenAttentively",
-        "publish",
-        [](std::string eventName, CompoundTag* data) -> void {
-            if (!data) return;
-            auto event = event::LseEvent(data);
-            ll::event::EventBus::getInstance().publish(event, ll::event::EventIdView(eventName));
-        }
-    );
-    RemoteCall::exportAs(
-        "iListenAttentively",
+        EXPORT_NAMESPACE,
         "publishToMod",
         [](std::string modName, std::string eventName, CompoundTag* data) -> void {
             if (!data) return;
@@ -125,10 +122,19 @@ void exportEvent() {
         }
     );
     RemoteCall::exportAs(
-        "iListenAttentively",
+        EXPORT_NAMESPACE,
         "emplaceListener",
-        [](std::string const& pluginName, std::string const& eventName, int priority) -> ll::event::ListenerId {
-            if(!ll::event::EventBus::getInstance().hasEvent(ll::event::EventIdView(eventName))) return ULLONG_MAX;
+        [](std::string const& pluginName, std::string eventName, int priority) -> ll::event::ListenerId {
+            // clang-format off
+            if (
+                !ll::event::EventBus::getInstance().hasEvent(ll::event::EventIdView(eventName))
+                && !mEventNameAlias.contains(eventName)
+                && !ll::event::EventBus::getInstance().hasEvent(ll::event::EventIdView(mEventNameAlias[eventName]))
+            ) return ULLONG_MAX;
+            // clang-format on
+            if (!ll::event::EventBus::getInstance().hasEvent(ll::event::EventIdView(eventName))) {
+                eventName = mEventNameAlias[eventName];
+            }
             auto                   listenerId = std::make_shared<ll::event::ListenerId>(ULLONG_MAX);
             ll::event::ListenerPtr listener   = ll::event::Listener<ll::event::Event>::create(
                 [pluginName, eventName, listenerId](ll::event::Event& event) -> void {

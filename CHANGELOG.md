@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.1.4] - 2024-03-08
+
+### Added
+
+- Added listenerId overflow check @zimuya4153
+- Added event alias @zimuya4153
+- Added more types of getNumber @zimuya4153
+
+### Clange
+
+- Use macro to simplify function definition @zimuya4153
+
 ## [0.1.3] - 2024-02-27
 
 ### Added
