@@ -132,9 +132,6 @@ void exportEvent() {
                 && !ll::event::EventBus::getInstance().hasEvent(ll::event::EventIdView(mEventNameAlias[eventName]))
             ) return ULLONG_MAX;
             // clang-format on
-            if (!ll::event::EventBus::getInstance().hasEvent(ll::event::EventIdView(eventName))) {
-                eventName = mEventNameAlias[eventName];
-            }
             auto                   listenerId = std::make_shared<ll::event::ListenerId>(ULLONG_MAX);
             ll::event::ListenerPtr listener   = ll::event::Listener<ll::event::Event>::create(
                 [pluginName, eventName, listenerId](ll::event::Event& event) -> void {
@@ -160,7 +157,14 @@ void exportEvent() {
                 },
                 ll::event::EventPriority(priority)
             );
-            if (ll::event::EventBus::getInstance().addListener(listener, ll::event::EventIdView(eventName))) {
+            if (ll::event::EventBus::getInstance().addListener(
+                    listener,
+                    ll::event::EventIdView(
+                        ll::event::EventBus::getInstance().hasEvent(ll::event::EventIdView(eventName))
+                            ? eventName
+                            : mEventNameAlias[eventName]
+                    )
+                )) {
                 *listenerId = listener->getId();
                 return listener->getId();
             }
