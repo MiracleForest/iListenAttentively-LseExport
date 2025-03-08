@@ -5,6 +5,10 @@
 #include <ll/api/event/EventBus.h>
 #include <ll/api/event/EventRefObjSerializer.h>
 #include <ll/api/mod/ModManagerRegistry.h>
+#include <mc/world/level/dimension/VanillaDimensions.h>
+#include <mc/world/level/dimension/Dimension.h>
+#include <ll/api/service/Bedrock.h>
+#include <mc/world/level/Level.h>
 #include <ll/api/utils/ErrorUtils.h>
 
 #define EXPORT_NAMESPACE "iListenAttentively"
@@ -65,6 +69,18 @@ extern std::unordered_map<std::string, std::string> mEventNameAlias;
 void exportEvent() {
     RemoteCall::exportAs(EXPORT_NAMESPACE, "getAllEventAlias", []() -> std::unordered_map<std::string, std::string> {
         return mEventNameAlias;
+    });
+    RemoteCall::exportAs(EXPORT_NAMESPACE, "getDimensionIdFromName", [](std::string const& dimensionName) -> int {
+        auto id = VanillaDimensions::fromString(dimensionName).id;
+        return id == VanillaDimensions::Undefined().id ? -1 : id;
+    });
+    RemoteCall::exportAs(EXPORT_NAMESPACE, "getDimensionNameFromId", [](int dimensionId) -> std::string {
+        return ll::service::getLevel()
+            .transform([&](Level& level) -> std::string {
+                auto dim = level.getOrCreateDimension(VanillaDimensions::fromSerializedInt(dimensionId));
+                return dim.expired() ? "" : dim.lock()->mName;
+            })
+            .value_or("");
     });
     RemoteCall::exportAs(EXPORT_NAMESPACE, "removeListener", [](ll::event::ListenerId eventId) -> bool {
         return ll::event::EventBus::getInstance().removeListener(eventId);

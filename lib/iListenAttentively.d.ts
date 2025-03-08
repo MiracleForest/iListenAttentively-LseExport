@@ -23,6 +23,18 @@ export function getPluginName(): string;
 /** 获取所有事件别名 */
 export function getAllEventAlias(): Record<string, string>;
 
+/** 通过维度名字获取ID */
+export function getDimensionNameFromId(
+    /** 维度ID */
+    dimensionId: number
+): string | undefined;
+
+/** 通过维度ID获取名字 */
+export function getDimensionIdFromName(
+    /** 维度名字 */
+    dimensionName: string
+): number | undefined;
+
 /** 获取所有已注册事件 */
 export function getAllEvent(): {
     /** 事件名 */
