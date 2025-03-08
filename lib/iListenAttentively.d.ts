@@ -154,13 +154,67 @@ export function getCompoundTag(
 ): NbtCompound | undefined;
 
 /** 根据内存地址/序列化信息获取数字 */
-export function getNumber(
+export function getLongLong(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
+): Number;
+
+/** 根据内存地址/序列化信息获取数字 */
+export function getUnsignedLongLong(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
+): Number;
+
+/** 根据内存地址/序列化信息获取数字 */
+export function getInt(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
+): Number;
+
+/** 根据内存地址/序列化信息获取数字 */
+export function getUnsignedInt(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
+): Number;
+
+/** 根据内存地址/序列化信息获取数字 */
+export function getShort(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
+): Number;
+
+/** 根据内存地址/序列化信息获取数字 */
+export function getUnsignedShort(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
+): Number;
+
+/** 根据内存地址/序列化信息获取数字 */
+export function getChar(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
+): Number;
+
+/** 根据内存地址/序列化信息获取数字 */
+export function getUnsignedChar(
     /** 地址/序列化信息 */
     info: number | NbtCompound | EventListenerData
 ): Number;
 
 /** 根据内存地址/序列化信息获取浮点数 */
 export function getFloat(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
+): Number;
+
+/** 根据内存地址/序列化信息获取浮点数 */
+export function getDouble(
+    /** 地址/序列化信息 */
+    info: number | NbtCompound | EventListenerData
+): Number;
+
+/** 根据内存地址/序列化信息获取浮点数 */
+export function getLongDouble(
     /** 地址/序列化信息 */
     info: number | NbtCompound | EventListenerData
 ): Number;

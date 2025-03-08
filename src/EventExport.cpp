@@ -20,6 +20,22 @@
 #define GET_INSTANCE_MACRO(CLASS_NAME)                                                                                 \
     GET_INSTANCE_BASE_MACRO("get" #CLASS_NAME, CLASS_NAME*, return reinterpret_cast<CLASS_NAME*>(info), return nullptr)
 
+#define GET_NUMBER_MACRO(TYPE_NAME, TYPE)                                                                              \
+    GET_INSTANCE_BASE_MACRO(                                                                                           \
+        "get" TYPE_NAME,                                                                                              \
+        int64,                                                                                                         \
+        return static_cast<int64>(*reinterpret_cast<TYPE*>(info)),                                                     \
+        return 0ull                                                                                                    \
+    )
+
+#define GET_FLOAT_MACRO(TYPE_NAME, TYPE)                                                                               \
+    GET_INSTANCE_BASE_MACRO(                                                                                           \
+        "get" TYPE_NAME,                                                                                               \
+        double,                                                                                                        \
+        return static_cast<double>(*reinterpret_cast<TYPE*>(info)),                                                    \
+        return 0ull                                                                                                    \
+    )
+
 #define GET_ADDRESS_MACRO(CLASS_NAME)                                                                                  \
     RemoteCall::exportAs("iListenAttentively", "get" #CLASS_NAME "Address", [](CLASS_NAME* target) -> uintptr_t {      \
         try {                                                                                                          \
@@ -145,9 +161,21 @@ void exportEvent() {
     GET_INSTANCE_MACRO(BlockActor);
     GET_INSTANCE_MACRO(Container);
     GET_INSTANCE_MACRO(CompoundTag);
-    GET_INSTANCE_BASE_MACRO("getNumber", int64_t, return *reinterpret_cast<int64_t*>(info), return 0);
-    GET_INSTANCE_BASE_MACRO("getFloat", double, return *reinterpret_cast<double*>(info), return 0);
-    GET_INSTANCE_BASE_MACRO("getBoolean", bool, return *reinterpret_cast<bool*>(info), return 0);
+
+    GET_NUMBER_MACRO("LongLong", int64);
+    GET_NUMBER_MACRO("UnsignedLongLong", uint64);
+    GET_NUMBER_MACRO("Int", int32);
+    GET_NUMBER_MACRO("UnsignedInt", uint32);
+    GET_NUMBER_MACRO("Short", int16);
+    GET_NUMBER_MACRO("UnsignedShort", uint16);
+    GET_NUMBER_MACRO("Char", int8);
+    GET_NUMBER_MACRO("UnsignedChar", uint8);
+
+    GET_NUMBER_MACRO("Float", float);
+    GET_NUMBER_MACRO("Double", double);
+    GET_NUMBER_MACRO("LongDouble", ldouble);
+
+    GET_INSTANCE_BASE_MACRO("getBoolean", auto, return *reinterpret_cast<bool*>(info), return false);
     GET_INSTANCE_BASE_MACRO("getString", std::string, return *reinterpret_cast<std::string*>(info), return "");
     GET_INSTANCE_BASE_MACRO("getRawAddress", uintptr_t, return *reinterpret_cast<uintptr_t*>(info), return 0);
 
