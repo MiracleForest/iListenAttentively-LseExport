@@ -7,8 +7,8 @@
 #include <ll/api/mod/ModManagerRegistry.h>
 #include <ll/api/utils/ErrorUtils.h>
 
-#define GET_INSTANCE_BASE_MACRO(EXPORT_NAME, CLASS_NAME, RETURN, ERROR_RETURN)                                         \
-    RemoteCall::exportAs("iListenAttentively", EXPORT_NAME, [](uintptr_t info) -> CLASS_NAME {                         \
+#define EXPORT_FUNCTION_MACRO(EXPORT_NAME, CLASS_NAME, RETURN, ERROR_RETURN, ...)                                      \
+    RemoteCall::exportAs("iListenAttentively", EXPORT_NAME, [](__VA_ARGS__) -> CLASS_NAME {                            \
         try {                                                                                                          \
             RETURN;                                                                                                    \
         } catch (...) {                                                                                                \
@@ -18,33 +18,42 @@
     });
 
 #define GET_INSTANCE_MACRO(CLASS_NAME)                                                                                 \
-    GET_INSTANCE_BASE_MACRO("get" #CLASS_NAME, CLASS_NAME*, return reinterpret_cast<CLASS_NAME*>(info), return nullptr)
+    EXPORT_FUNCTION_MACRO(                                                                                             \
+        "get" #CLASS_NAME,                                                                                             \
+        CLASS_NAME*,                                                                                                   \
+        return reinterpret_cast<CLASS_NAME*>(info),                                                                    \
+        return nullptr,                                                                                                \
+        uintptr_t info                                                                                                 \
+    )
 
 #define GET_NUMBER_MACRO(TYPE_NAME, TYPE)                                                                              \
-    GET_INSTANCE_BASE_MACRO(                                                                                           \
-        "get" TYPE_NAME,                                                                                              \
+    EXPORT_FUNCTION_MACRO(                                                                                             \
+        "get" TYPE_NAME,                                                                                               \
         int64,                                                                                                         \
         return static_cast<int64>(*reinterpret_cast<TYPE*>(info)),                                                     \
-        return 0ull                                                                                                    \
+        return 0ull,                                                                                                   \
+        uintptr_t info                                                                                                 \
     )
 
 #define GET_FLOAT_MACRO(TYPE_NAME, TYPE)                                                                               \
-    GET_INSTANCE_BASE_MACRO(                                                                                           \
+    EXPORT_FUNCTION_MACRO(                                                                                             \
         "get" TYPE_NAME,                                                                                               \
         double,                                                                                                        \
         return static_cast<double>(*reinterpret_cast<TYPE*>(info)),                                                    \
-        return 0ull                                                                                                    \
+        return 0ull,                                                                                                   \
+        uintptr_t info                                                                                                 \
     )
 
-#define GET_ADDRESS_MACRO(CLASS_NAME)                                                                                  \
-    RemoteCall::exportAs("iListenAttentively", "get" #CLASS_NAME "Address", [](CLASS_NAME* target) -> uintptr_t {      \
-        try {                                                                                                          \
-            return reinterpret_cast<uintptr_t>(target);                                                                \
-        } catch (...) {                                                                                                \
-            ll::error_utils::printCurrentException(LseExport::getInstance().getSelf().getLogger());                    \
-            return 0;                                                                                                  \
-        }                                                                                                              \
-    });
+#define GET_ADDRESS_BASE_MACRO(CLASS_NAME, TYPE)                                                                       \
+    EXPORT_FUNCTION_MACRO(                                                                                             \
+        "get" CLASS_NAME "Address",                                                                                    \
+        uintptr_t,                                                                                                     \
+        return reinterpret_cast<uintptr_t>(info),                                                                      \
+        return 0ull,                                                                                                   \
+        TYPE * info                                                                                                    \
+    )
+
+#define GET_ADDRESS_MACRO(TYPE) GET_ADDRESS_BASE_MACRO(#TYPE, TYPE)
 
 namespace ila {
 
@@ -175,14 +184,14 @@ void exportEvent() {
     GET_NUMBER_MACRO("Double", double);
     GET_NUMBER_MACRO("LongDouble", ldouble);
 
-    GET_INSTANCE_BASE_MACRO("getBoolean", auto, return *reinterpret_cast<bool*>(info), return false);
-    GET_INSTANCE_BASE_MACRO("getString", std::string, return *reinterpret_cast<std::string*>(info), return "");
-    GET_INSTANCE_BASE_MACRO("getRawAddress", uintptr_t, return *reinterpret_cast<uintptr_t*>(info), return 0);
+    EXPORT_FUNCTION_MACRO("getBoolean", bool, return *reinterpret_cast<bool*>(info), return false, bool info);
+    EXPORT_FUNCTION_MACRO("getString", std::string, return *reinterpret_cast<std::string*>(info), return "", bool info);
+    EXPORT_FUNCTION_MACRO("getRawAddress", uintptr_t, return *reinterpret_cast<uintptr_t*>(info), return 0, bool info);
 
     GET_ADDRESS_MACRO(Player);
     GET_ADDRESS_MACRO(Actor);
     GET_ADDRESS_MACRO(ItemStack);
-    GET_ADDRESS_MACRO(Block const);
+    GET_ADDRESS_BASE_MACRO("Block", Block const);
     GET_ADDRESS_MACRO(BlockActor);
     GET_ADDRESS_MACRO(Container);
     GET_ADDRESS_MACRO(CompoundTag);
