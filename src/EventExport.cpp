@@ -63,6 +63,9 @@ namespace ila {
 extern std::unordered_map<std::string, std::string> mEventNameAlias;
 
 void exportEvent() {
+    RemoteCall::exportAs(EXPORT_NAMESPACE, "getAllEventAlias", []() -> std::unordered_map<std::string, std::string> {
+        return mEventNameAlias;
+    });
     RemoteCall::exportAs(EXPORT_NAMESPACE, "removeListener", [](ll::event::ListenerId eventId) -> bool {
         return ll::event::EventBus::getInstance().removeListener(eventId);
     });

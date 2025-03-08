@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added listenerId overflow check @zimuya4153
 - Added event alias @zimuya4153
+- Added getAllEventAlias function @zimuya4153
 - Added more types of getNumber @zimuya4153
 
 ### Clange

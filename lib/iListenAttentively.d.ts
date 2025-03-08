@@ -20,6 +20,9 @@ export enum EventPriority {
 /** 获取自身插件名 */
 export function getPluginName(): string;
 
+/** 获取所有事件别名 */
+export function getAllEventAlias(): Record<string, string>;
+
 /** 获取所有已注册事件 */
 export function getAllEvent(): {
     /** 事件名 */
