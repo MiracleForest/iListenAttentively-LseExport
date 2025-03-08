@@ -7,7 +7,7 @@
 
 namespace ila {
 //clang-format off
-static std::unordered_map<std::string, std::string> mEventNameAlias = {
+std::unordered_map<std::string, std::string> mEventNameAlias = {
     {"ila::mc::ClientLoginBeforeEvent", "ila::mc::server::ClientLoginBeforeEvent"},
     {"ila::mc::ClientLoginAfterEvent", "ila::mc::server::ClientLoginAfterEvent"},
     {"ila::mc::RegisterCmdBeforeEvent", "ila::mc::server::RegisterCmdBeforeEvent"},
