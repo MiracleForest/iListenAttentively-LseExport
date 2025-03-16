@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added forEach, filter, map, find, some, every, reduce for NbtList @zimuya4153
+
+### Fixed
+
+- Fixed iterator index for NbtList @zimuya4153
+
 
 ## [0.1.4] - 2024-03-08
 

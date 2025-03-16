@@ -261,6 +261,13 @@ declare let nbtProxyHandler: ProxyHandler<any>;
 
 interface NbtList {
     toSNBT(index = -1): string;
+    forEach(callback: (value: any, index: number, array: NbtList) => void): void;
+    filter(callback: (value: any, index: number, array: NbtList) => boolean): NbtList;
+    map(callback: (value: any, index: number, array: NbtList) => any): NbtList;
+    find(callback: (value: any, index: number, array: NbtList) => boolean): any;
+    some(callback: (value: any, index: number, array: NbtList) => boolean): boolean;
+    every(callback: (value: any, index: number, array: NbtList) => boolean): boolean;
+    reduce<T = any>(callback: (accumulator: T, value: any, index: number, array: NbtList) => any, initialValue?: T): T;
 }
 interface NbtByte {
     toSNBT(): string;
