@@ -1,7 +1,7 @@
 /** 监听ID */
-type ListenerId = number;
+type ListenerId = Number;
 /** 事件名 */
-type EventName = string;
+type EventName = String;
 
 /** 事件优先级 */
 export enum EventPriority {
@@ -18,60 +18,60 @@ export enum EventPriority {
 };
 
 /** 获取自身插件名 */
-export function getPluginName(): string;
+export function getPluginName(): String;
 
 /** 获取所有事件别名 */
-export function getAllEventAlias(): Record<string, string>;
+export function getAllEventAlias(): Record<String, String>;
 
 /** 通过维度名字获取ID */
 export function getDimensionNameFromId(
     /** 维度ID */
-    dimensionId: number
-): string | undefined;
+    dimensionId: Number
+): String | undefined;
 
 /** 通过维度ID获取名字 */
 export function getDimensionIdFromName(
     /** 维度名字 */
-    dimensionName: string
-): number | undefined;
+    dimensionName: String
+): Number | undefined;
 
 /** 获取所有已注册事件 */
 export function getAllEvent(): {
     /** 事件名 */
     eventName: EventName,
     /** 模组名 */
-    modName: string
+    modName: String
 }[];
 
 /** 获取指定插件的已注册事件 */
 export function getAllEvent(
     /** 模组名 */
-    modName: string
+    modName: String
 ): EventName[];
 
 /** 获取事件监听数量 */
 export function getListenerCount(
     /** 事件名 */
     eventName: EventName
-): number;
+): Number;
 
 /** 删除事件监听 */
 export function removeListener(
     /** 监听ID */
     listenerId: ListenerId
-): boolean;
+): Boolean;
 
 /** 是否存在事件 */
 export function hasEvent(
     /** 事件名 */
     eventName: EventName
-): boolean;
+): Boolean;
 
 /** 是否存在监听 */
 export function hasListener(
     /** 监听ID */
     listenerId: ListenerId
-): boolean;
+): Boolean;
 
 /** 
  * 注册事件(需在自身插件加载完后注册)
@@ -84,7 +84,7 @@ export function hasListener(
 export function RegisterEvent(
     /** 事件名 */
     eventName: EventName
-): boolean;
+): Boolean;
 
 /** 推送事件 */
 export function publish(
@@ -101,14 +101,14 @@ export function publish(
     /** 事件数据 */
     eventData: NbtCompound,
     /** 模组名 */
-    modName: string
+    modName: String
 ): void;
 
 interface EventListenerData extends NbtCompound extends NbtList {
-    [key: string | number]: EventListenerData | undefined;
-    [Symbol.iterator]: () => Iterator<[string | number, EventListenerData]>;
+    [key: String | Number]: EventListenerData | undefined;
+    [Symbol.iterator]: () => Iterator<[String | Number, EventListenerData]>;
 
-    toSNBT(index = -1): string;
+    toSNBT(index = -1): String;
 }
 
 /** 安装事件监听(需事件注册后安装) */
@@ -123,170 +123,170 @@ export function emplaceListener(
     /** 事件优先级 */
     priority: EventPriority.Normal = EventPriority.Normal,
     /** 模组名 */
-    modName: string | undefined = getPluginName()
+    modName: String | undefined = getPluginName()
 ): ListenerId;
 
 /** 根据内存地址/序列化信息获取玩家 */
 export function getPlayer(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Player | undefined;
 
 /** 根据内存地址/序列化信息获取实体 */
 export function getActor(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Entity | undefined;
 
 /** 根据内存地址/序列化信息获取物品 */
 export function getItemStack(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Item | undefined;
 
 /** 根据内存地址/序列化信息获取方块 */
 export function getBlock(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Block | undefined;
 
 /** 根据内存地址/序列化信息获取方块实体 */
 export function getBlockActor(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): BlockEntity | undefined;
 
 /** 根据内存地址/序列化信息获取容器 */
 export function getContainer(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Container | undefined;
 
 /** 根据内存地址/序列化信息获取NBT */
 export function getCompoundTag(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): NbtCompound | undefined;
 
 /** 根据内存地址/序列化信息获取数字 */
 export function getLongLong(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Number;
 
 /** 根据内存地址/序列化信息获取数字 */
 export function getUnsignedLongLong(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Number;
 
 /** 根据内存地址/序列化信息获取数字 */
 export function getInt(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Number;
 
 /** 根据内存地址/序列化信息获取数字 */
 export function getUnsignedInt(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Number;
 
 /** 根据内存地址/序列化信息获取数字 */
 export function getShort(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Number;
 
 /** 根据内存地址/序列化信息获取数字 */
 export function getUnsignedShort(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Number;
 
 /** 根据内存地址/序列化信息获取数字 */
 export function getChar(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Number;
 
 /** 根据内存地址/序列化信息获取数字 */
 export function getUnsignedChar(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Number;
 
 /** 根据内存地址/序列化信息获取浮点数 */
 export function getFloat(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Number;
 
 /** 根据内存地址/序列化信息获取浮点数 */
 export function getDouble(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Number;
 
 /** 根据内存地址/序列化信息获取浮点数 */
 export function getLongDouble(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Number;
 
 /** 根据内存地址/序列化信息获取布尔值 */
 export function getBoolean(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): Boolean;
 
 /** 根据内存地址/序列化信息获取字符串 */
 export function getString(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
+    info: Number | NbtCompound | EventListenerData
 ): String;
 
 /** 根据内存地址/序列化信息获取指针原始地址 */
 export function getRawAddress(
     /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): number | undefined;
+    info: Number | NbtCompound | EventListenerData
+): Number | undefined;
 
 /** 获取实体/玩家/物品/方块/方块实体/容器/NBT地址 */
 export function getAddress(
     target: Entity | Player | Item | Block | BlockEntity | Container | CompoundTag
-): number | undefined;
+): Number | undefined;
 
 declare let nbtProxyHandler: ProxyHandler<any>;
 
 interface NbtList {
-    toSNBT(index = -1): string;
-    forEach(callback: (value: any, index: number, array: NbtList) => void): void;
-    filter(callback: (value: any, index: number, array: NbtList) => boolean): NbtList;
-    map(callback: (value: any, index: number, array: NbtList) => any): NbtList;
-    find(callback: (value: any, index: number, array: NbtList) => boolean): any;
-    some(callback: (value: any, index: number, array: NbtList) => boolean): boolean;
-    every(callback: (value: any, index: number, array: NbtList) => boolean): boolean;
-    reduce<T = any>(callback: (accumulator: T, value: any, index: number, array: NbtList) => any, initialValue?: T): T;
+    toSNBT(index = -1): String;
+    forEach(callback: (value: any, index: Number, array: NbtList) => void): void;
+    filter(callback: (value: any, index: Number, array: NbtList) => Boolean): NbtList;
+    map(callback: (value: any, index: Number, array: NbtList) => any): NbtList;
+    find(callback: (value: any, index: Number, array: NbtList) => Boolean): any;
+    some(callback: (value: any, index: Number, array: NbtList) => Boolean): Boolean;
+    every(callback: (value: any, index: Number, array: NbtList) => Boolean): Boolean;
+    reduce<T = any>(callback: (accumulator: T, value: any, index: Number, array: NbtList) => any, initialValue?: T): T;
 }
 interface NbtByte {
-    toSNBT(): string;
+    toSNBT(): String;
 }
 interface NbtDouble {
-    toSNBT(): string;
+    toSNBT(): String;
 }
 interface NbtFloat {
-    toSNBT(): string;
+    toSNBT(): String;
 }
 interface NbtLong {
-    toSNBT(): string;
+    toSNBT(): String;
 }
 interface NbtInt {
-    toSNBT(): string;
+    toSNBT(): String;
 }
 interface NbtShort {
-    toSNBT(): string;
+    toSNBT(): String;
 }
 interface NbtString {
-    toSNBT(): string;
+    toSNBT(): String;
 }

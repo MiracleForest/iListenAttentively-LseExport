@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed iterator index for NbtList @zimuya4153
 
+### Change
+
+- Updated event alias @zimuya4153
+
 
 ## [0.1.4] - 2024-03-08
 
