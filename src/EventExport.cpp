@@ -121,6 +121,7 @@ void exportEvent() {
     });
     RemoteCall::exportAs(EXPORT_NAMESPACE, "RegisterEvent", [](std::string pluginName, std::string eventName) -> bool {
         if (auto mod = ll::mod::ModManagerRegistry::getInstance().getMod(pluginName)) {
+            LseExport::getInstance().getSelf().getLogger().debug("Register event {0} in {1} plugin", eventName, pluginName);
             return ll::event::EventBus::getInstance()
                 .setEventEmitter([](auto&&...) { return nullptr; }, ll::event::EventIdView(eventName), mod);
         }
@@ -129,6 +130,7 @@ void exportEvent() {
     RemoteCall::exportAs(EXPORT_NAMESPACE, "publish", [](std::string eventName, CompoundTag* data) -> void {
         if (!data) return;
         auto event = event::LseEvent(data);
+        LseExport::getInstance().getSelf().getLogger().debug("Publish event {0}, data: {1}", eventName, data->toSnbt());
         ll::event::EventBus::getInstance().publish(event, ll::event::EventIdView(eventName));
     });
     RemoteCall::exportAs(
@@ -137,6 +139,12 @@ void exportEvent() {
         [](std::string modName, std::string eventName, CompoundTag* data) -> void {
             if (!data) return;
             auto event = event::LseEvent(data);
+            LseExport::getInstance().getSelf().getLogger().debug(
+                "Publish event {0} to {1} plugin, data: {1}",
+                eventName,
+                modName,
+                data->toSnbt()
+            );
             ll::event::EventBus::getInstance().publish(modName, event, ll::event::EventIdView(eventName));
         }
     );
@@ -144,6 +152,7 @@ void exportEvent() {
         EXPORT_NAMESPACE,
         "emplaceListener",
         [](std::string const& pluginName, std::string eventName, int priority) -> ll::event::ListenerId {
+            LseExport::getInstance().getSelf().getLogger().debug("Register event listener for {0} in {1} plugin", eventName, pluginName);
             // clang-format off
             if (
                 !ll::event::EventBus::getInstance().hasEvent(ll::event::EventIdView(eventName))
@@ -158,6 +167,12 @@ void exportEvent() {
                         auto funcName = eventName + "_" + std::to_string(*listenerId);
                         if (!RemoteCall::hasFunc(pluginName, funcName)) {
                             ll::event::EventBus::getInstance().removeListener(*listenerId);
+                            LseExport::getInstance().getSelf().getLogger().debug(
+                                "Remove event listener for {0} in {1} plugin, id: {2}",
+                                eventName,
+                                pluginName,
+                                *listenerId
+                            );
                             return;
                         }
                         std::unique_ptr<CompoundTag> eventData = std::make_unique<CompoundTag>();
@@ -185,6 +200,12 @@ void exportEvent() {
                     )
                 )) {
                 *listenerId = listener->getId();
+                LseExport::getInstance().getSelf().getLogger().debug(
+                    "Register event listener for {0} in {1} plugin, id: {2}",
+                    eventName,
+                    pluginName,
+                    *listenerId
+                );
                 return listener->getId();
             }
             listener.reset();
