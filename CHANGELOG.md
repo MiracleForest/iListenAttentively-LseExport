@@ -10,14 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added forEach, filter, map, find, some, every, reduce for NbtList @zimuya4153
+- Added getEventName and getEventAlias function @zimuya4153
 
 ### Fixed
 
 - Fixed iterator index for NbtList @zimuya4153
 
-### Change
+### Changed
 
-- Updated event alias @zimuya4153
+- Changed the event alias to dynamically generated @zimuya4153
 
 
 ## [0.1.4] - 2024-03-08
@@ -30,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added getDimensionIdFromName and getDimensionNameFromId function @zimuya4153
 - Added more types of getNumber @zimuya4153
 
-### Clange
+### Clanged
 
 - Use macro to simplify function definition @zimuya4153
 

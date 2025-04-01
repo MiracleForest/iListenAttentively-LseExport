@@ -168,7 +168,7 @@ void LseExport::exportEvent() {
         EXPORT_NAMESPACE,
         "emplaceListener",
         [&](std::string const& pluginName, std::string eventName, int priority) -> ll::event::ListenerId {
-            LseExport::getInstance().getSelf().getLogger().debug("Register event listener for {0} in {1} plugin", eventName, pluginName);
+            LseExport::getInstance().getSelf().getLogger().debug("Try register event listener for {0} in {1} plugin", eventName, pluginName);
             // clang-format off
             if (
                 !ll::event::EventBus::getInstance().hasEvent(ll::event::EventIdView(eventName))

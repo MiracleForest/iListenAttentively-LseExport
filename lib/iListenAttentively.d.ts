@@ -21,7 +21,19 @@ export enum EventPriority {
 export function getPluginName(): String;
 
 /** 获取所有事件别名 */
-export function getAllEventAlias(): Record<String, String>;
+export function getAllEventAlias(): Record<EventName, EventName>;
+
+/** 获取事件别名 */
+export function getEventAlias(
+    /** 事件名 */
+    eventName: EventName
+): EventName[];
+
+/** 通过事件别名获取事件名 */
+export function getEventName(
+    /** 事件别名 */
+    eventAlias: EventName
+): EventName;
 
 /** 通过维度名字获取ID */
 export function getDimensionNameFromId(
