@@ -64,12 +64,28 @@
 
 namespace ila {
 
-extern std::unordered_map<std::string, std::string> mEventNameAlias;
-
-void exportEvent() {
-    RemoteCall::exportAs(EXPORT_NAMESPACE, "getAllEventAlias", []() -> std::unordered_map<std::string, std::string> {
+void LseExport::exportEvent() {
+    RemoteCall::exportAs(EXPORT_NAMESPACE, "getAllEventAlias", [&]() -> std::unordered_map<std::string, std::string> {
         return mEventNameAlias;
     });
+    RemoteCall::exportAs(
+        EXPORT_NAMESPACE,
+        "getEventAlias",
+        [&](std::string const& eventName) -> std::vector<std::string> {
+            std::vector<std::string> result;
+            for (auto& [eventAlias, modEventName] : mEventNameAlias) {
+                if (modEventName == eventName) result.push_back(eventAlias);
+            }
+            return result;
+        }
+    );
+    RemoteCall::exportAs(
+        EXPORT_NAMESPACE,
+        "getEventName",
+        [&](std::string const& eventAlias) -> std::string {
+            return mEventNameAlias.contains(eventAlias) ? mEventNameAlias[eventAlias] : "";
+        }
+    );
     RemoteCall::exportAs(EXPORT_NAMESPACE, "getDimensionIdFromName", [](std::string const& dimensionName) -> int {
         auto id = VanillaDimensions::fromString(dimensionName).id;
         return id == VanillaDimensions::Undefined().id ? -1 : id;
@@ -151,7 +167,7 @@ void exportEvent() {
     RemoteCall::exportAs(
         EXPORT_NAMESPACE,
         "emplaceListener",
-        [](std::string const& pluginName, std::string eventName, int priority) -> ll::event::ListenerId {
+        [&](std::string const& pluginName, std::string eventName, int priority) -> ll::event::ListenerId {
             LseExport::getInstance().getSelf().getLogger().debug("Register event listener for {0} in {1} plugin", eventName, pluginName);
             // clang-format off
             if (

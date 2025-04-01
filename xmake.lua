@@ -35,6 +35,7 @@ target("iListenAttentively-LseExport")
         "levilamina",
         "legacyremotecall"
     )
+    set_optimize("fastest")
     set_exceptions("none")
     set_kind("shared")
     set_languages("cxx20")

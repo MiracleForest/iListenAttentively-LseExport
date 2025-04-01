@@ -10,5 +10,10 @@
         {
             "name": "LegacyRemoteCall"
         }
+    ],
+    "optionalDependencies": [
+        {
+            "name": "iListenAttentively"
+        }
     ]
 }

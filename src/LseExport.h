@@ -3,6 +3,10 @@
 
 namespace ila {
 
+extern std::unordered_map<std::string, std::string> mEventNameAlias;
+
+void exportEvent();
+
 class LseExport {
 
 public:
@@ -18,10 +22,13 @@ public:
 
     bool disable();
 
-private:
-    ll::mod::NativeMod& mSelf;
-};
+    void registerDefaultEventsAlias();
 
-void exportEvent();
+    void exportEvent();
+
+private:
+    ll::mod::NativeMod&                          mSelf;
+    std::unordered_map<std::string, std::string> mEventNameAlias;
+};
 
 } // namespace ila
