@@ -5,21 +5,22 @@
 #include <ll/api/event/EventBus.h>
 #include <ll/api/event/EventRefObjSerializer.h>
 #include <ll/api/mod/ModManagerRegistry.h>
-#include <mc/world/level/dimension/VanillaDimensions.h>
-#include <mc/world/level/dimension/Dimension.h>
 #include <ll/api/service/Bedrock.h>
-#include <mc/world/level/Level.h>
 #include <ll/api/utils/ErrorUtils.h>
+#include <mc/world/level/Level.h>
+#include <mc/world/level/dimension/Dimension.h>
+#include <mc/world/level/dimension/VanillaDimensions.h>
+#include <unordered_map>
 
 #define EXPORT_NAMESPACE "iListenAttentively"
 
 #define EXPORT_FUNCTION_MACRO(EXPORT_NAME, CLASS_NAME, RETURN, ERROR_RETURN, ...)                                      \
-    RemoteCall::exportAs(EXPORT_NAMESPACE, EXPORT_NAME, [](__VA_ARGS__) -> CLASS_NAME {                                \
+    RemoteCall::exportAs(EXPORT_NAMESPACE, EXPORT_NAME, [&](__VA_ARGS__) -> CLASS_NAME {                               \
         try {                                                                                                          \
             RETURN;                                                                                                    \
         } catch (...) {                                                                                                \
-            LseExport::getInstance().getSelf().getLogger().error("Failed to call " EXPORT_NAMESPACE "::" EXPORT_NAME); \
-            ll::error_utils::printCurrentException(LseExport::getInstance().getSelf().getLogger());                    \
+            getSelf().getLogger().error("Failed to call " EXPORT_NAMESPACE "::" EXPORT_NAME);                          \
+            ll::error_utils::printCurrentException(getSelf().getLogger());                                             \
             ERROR_RETURN;                                                                                              \
         }                                                                                                              \
     });
@@ -62,6 +63,8 @@
 
 #define GET_ADDRESS_MACRO(TYPE) GET_ADDRESS_BASE_MACRO(#TYPE, TYPE)
 
+#define LLEventBus ll::event::EventBus::getInstance()
+
 namespace ila {
 
 void LseExport::exportEvent() {
@@ -79,13 +82,9 @@ void LseExport::exportEvent() {
             return result;
         }
     );
-    RemoteCall::exportAs(
-        EXPORT_NAMESPACE,
-        "getEventName",
-        [&](std::string const& eventAlias) -> std::string {
-            return mEventNameAlias.contains(eventAlias) ? mEventNameAlias[eventAlias] : "";
-        }
-    );
+    RemoteCall::exportAs(EXPORT_NAMESPACE, "getEventName", [&](std::string const& eventAlias) -> std::string {
+        return mEventNameAlias.contains(eventAlias) ? mEventNameAlias[eventAlias] : "";
+    });
     RemoteCall::exportAs(EXPORT_NAMESPACE, "getDimensionIdFromName", [](std::string const& dimensionName) -> int {
         auto id = VanillaDimensions::fromString(dimensionName).id;
         return id == VanillaDimensions::Undefined().id ? -1 : id;
@@ -99,17 +98,17 @@ void LseExport::exportEvent() {
             .value_or("");
     });
     RemoteCall::exportAs(EXPORT_NAMESPACE, "removeListener", [](ll::event::ListenerId eventId) -> bool {
-        return ll::event::EventBus::getInstance().removeListener(eventId);
+        return LLEventBus.removeListener(eventId);
     });
     RemoteCall::exportAs(EXPORT_NAMESPACE, "hasListener", [](ll::event::ListenerId eventId) -> bool {
-        return ll::event::EventBus::getInstance().hasListener(eventId);
+        return LLEventBus.hasListener(eventId);
     });
     RemoteCall::exportAs(
         EXPORT_NAMESPACE,
         "getAllEvent",
         []() -> std::vector<std::unordered_map<std::string, std::string>> {
             std::vector<std::unordered_map<std::string, std::string>> result;
-            for (auto event : ll::event::EventBus::getInstance().events()) {
+            for (auto event : LLEventBus.events()) {
                 std::unordered_map<std::string, std::string> item;
                 item["modName"]   = event.first;
                 item["eventName"] = event.second.name;
@@ -123,112 +122,116 @@ void LseExport::exportEvent() {
         "getAllEventFromModName",
         [](std::string modName) -> std::vector<std::string> {
             std::vector<std::string> result;
-            for (auto event : ll::event::EventBus::getInstance().events(modName)) {
+            for (auto event : LLEventBus.events(modName)) {
                 result.push_back(std::string(event.name));
             }
             return result;
         }
     );
     RemoteCall::exportAs(EXPORT_NAMESPACE, "hasEvent", [](std::string eventName) -> bool {
-        return ll::event::EventBus::getInstance().hasEvent(ll::event::EventIdView(eventName));
+        return LLEventBus.hasEvent(ll::event::EventIdView(eventName));
     });
     RemoteCall::exportAs(EXPORT_NAMESPACE, "getListenerCount", [](std::string eventName) -> size_t {
-        return ll::event::EventBus::getInstance().getListenerCount(ll::event::EventIdView(eventName));
+        return LLEventBus.getListenerCount(ll::event::EventIdView(eventName));
     });
-    RemoteCall::exportAs(EXPORT_NAMESPACE, "RegisterEvent", [](std::string pluginName, std::string eventName) -> bool {
+    RemoteCall::exportAs(EXPORT_NAMESPACE, "RegisterEvent", [&](std::string pluginName, std::string eventName) -> bool {
         if (auto mod = ll::mod::ModManagerRegistry::getInstance().getMod(pluginName)) {
-            LseExport::getInstance().getSelf().getLogger().debug("Register event {0} in {1} plugin", eventName, pluginName);
-            return ll::event::EventBus::getInstance()
+            getSelf().getLogger().debug("Register event {0} in {1} plugin", eventName, pluginName);
+            return LLEventBus
                 .setEventEmitter([](auto&&...) { return nullptr; }, ll::event::EventIdView(eventName), mod);
         }
         return false;
     });
-    RemoteCall::exportAs(EXPORT_NAMESPACE, "publish", [](std::string eventName, CompoundTag* data) -> void {
+    RemoteCall::exportAs(EXPORT_NAMESPACE, "publish", [&](std::string eventName, CompoundTag* data) -> void {
         if (!data) return;
         auto event = event::LseEvent(data);
-        LseExport::getInstance().getSelf().getLogger().debug("Publish event {0}, data: {1}", eventName, data->toSnbt());
-        ll::event::EventBus::getInstance().publish(event, ll::event::EventIdView(eventName));
+        getSelf().getLogger().debug("Publish event {0}, data: {1}", eventName, data->toSnbt());
+        LLEventBus.publish(event, ll::event::EventIdView(eventName));
     });
     RemoteCall::exportAs(
         EXPORT_NAMESPACE,
         "publishToMod",
-        [](std::string modName, std::string eventName, CompoundTag* data) -> void {
+        [&](std::string modName, std::string eventName, CompoundTag* data) -> void {
             if (!data) return;
             auto event = event::LseEvent(data);
-            LseExport::getInstance().getSelf().getLogger().debug(
-                "Publish event {0} to {1} plugin, data: {1}",
-                eventName,
-                modName,
-                data->toSnbt()
-            );
-            ll::event::EventBus::getInstance().publish(modName, event, ll::event::EventIdView(eventName));
+            getSelf()
+                .getLogger()
+                .debug("Publish event {0} to {1} plugin, data: {1}", eventName, modName, data->toSnbt());
+            LLEventBus.publish(modName, event, ll::event::EventIdView(eventName));
         }
     );
     RemoteCall::exportAs(
         EXPORT_NAMESPACE,
         "emplaceListener",
         [&](std::string const& pluginName, std::string eventName, int priority) -> ll::event::ListenerId {
-            LseExport::getInstance().getSelf().getLogger().debug("Try register event listener for {0} in {1} plugin", eventName, pluginName);
+            // 输出尝试注册提示
             // clang-format off
-            if (
-                !ll::event::EventBus::getInstance().hasEvent(ll::event::EventIdView(eventName))
-                && !mEventNameAlias.contains(eventName)
-                && !ll::event::EventBus::getInstance().hasEvent(ll::event::EventIdView(mEventNameAlias[eventName]))
-            ) return ULLONG_MAX;
+            static std::unordered_map<int, std::string> mPriorityNameMap = {
+                {static_cast<int>(ll::event::EventPriority::Lowest), "Lowest"},
+                {static_cast<int>(ll::event::EventPriority::Low), "Low"},
+                {static_cast<int>(ll::event::EventPriority::Normal), "Normal"},
+                {static_cast<int>(ll::event::EventPriority::High), "High"},
+                {static_cast<int>(ll::event::EventPriority::Highest), "Highest"}
+            };
             // clang-format on
-            auto                   listenerId = std::make_shared<ll::event::ListenerId>(ULLONG_MAX);
-            ll::event::ListenerPtr listener   = ll::event::Listener<ll::event::Event>::create(
-                [pluginName, eventName, listenerId](ll::event::Event& event) -> void {
+            auto priorityName =
+                mPriorityNameMap.contains(priority) ? mPriorityNameMap[priority] : std::to_string(priority);
+            getSelf().getLogger().debug(
+                "Try register {0} event listener in {1} plugin, priority: {2}",
+                eventName,
+                pluginName,
+                priorityName
+            );
+
+            // 创建监听器
+            auto listenerId = std::make_shared<ll::event::ListenerId>(ULLONG_MAX);
+            auto listener   = ll::event::Listener<ll::event::Event>::create(
+                [pluginName, eventName, listenerId, this](ll::event::Event& event) -> void {
+                    auto funcName = eventName + "#" + std::to_string(*listenerId);
+                    if (!RemoteCall::hasFunc(pluginName, funcName)) {
+                        ll::event::EventBus::getInstance().removeListener(*listenerId);
+                        return getSelf().getLogger().debug(
+                            "Remove event listener for {0} in {1} plugin, id: {2}, reason: function not found",
+                            eventName,
+                            pluginName,
+                            *listenerId
+                        );
+                    }
                     try {
-                        auto funcName = eventName + "_" + std::to_string(*listenerId);
-                        if (!RemoteCall::hasFunc(pluginName, funcName)) {
-                            ll::event::EventBus::getInstance().removeListener(*listenerId);
-                            LseExport::getInstance().getSelf().getLogger().debug(
-                                "Remove event listener for {0} in {1} plugin, id: {2}",
-                                eventName,
-                                pluginName,
-                                *listenerId
-                            );
-                            return;
-                        }
-                        std::unique_ptr<CompoundTag> eventData = std::make_unique<CompoundTag>();
-                        event.serialize(*eventData);
-                        if (auto* result =
-                                RemoteCall::importAs<CompoundTag*(std::unique_ptr<CompoundTag>)>(pluginName, funcName)(
-                                    std::move(eventData)
-                                )) {
-                            event.deserialize(*result);
-                        }
+                        CompoundTag nbt;
+                        event.serialize(nbt);
+                        // clang-format off
+                        event.deserialize(*RemoteCall::importAs<CompoundTag*(CompoundTag*)>(pluginName, funcName)(&nbt));
+                        // clang-format on
                     } catch (...) {
-                        static auto& logger = LseExport::getInstance().getSelf().getLogger();
-                        logger.error("Failed to execute event callback for {} in {} plugin", eventName, pluginName);
-                        ll::error_utils::printCurrentException(logger);
+                        getSelf().getLogger().error(
+                            "Failed to execute event callback for {0} in {1} plugin",
+                            eventName,
+                            pluginName
+                        );
+                        ll::error_utils::printCurrentException(getSelf().getLogger());
                     }
                 },
-                ll::event::EventPriority(priority)
+                static_cast<ll::event::EventPriority>(priority)
             );
-            if (ll::event::EventBus::getInstance().addListener(
-                    listener,
-                    ll::event::EventIdView(
-                        ll::event::EventBus::getInstance().hasEvent(ll::event::EventIdView(eventName))
-                            ? eventName
-                            : mEventNameAlias[eventName]
-                    )
-                )) {
-                *listenerId = listener->getId();
-                LseExport::getInstance().getSelf().getLogger().debug(
-                    "Register event listener for {0} in {1} plugin, id: {2}",
+
+            // 注册监听器
+            if (LLEventBus.addListener(listener, ll::event::EventIdView(eventName))) {
+                getSelf().getLogger().debug(
+                    "Register event listener for {0} in {1} plugin, id: {2}, priority: {3}",
                     eventName,
                     pluginName,
-                    *listenerId
+                    listener->getId(),
+                    priorityName
                 );
-                return listener->getId();
+                return *listenerId = listener->getId();
             }
             listener.reset();
             return ULLONG_MAX;
         }
     );
 
+    // clang-format off
     GET_INSTANCE_MACRO(Player);
     GET_INSTANCE_MACRO(Actor);
     GET_INSTANCE_MACRO(ItemStack);
@@ -250,9 +253,9 @@ void LseExport::exportEvent() {
     GET_NUMBER_MACRO("Double", double);
     GET_NUMBER_MACRO("LongDouble", ldouble);
 
-    EXPORT_FUNCTION_MACRO("getBoolean", bool, return *reinterpret_cast<bool*>(info), return false, bool info);
-    EXPORT_FUNCTION_MACRO("getString", std::string, return *reinterpret_cast<std::string*>(info), return "", bool info);
-    EXPORT_FUNCTION_MACRO("getRawAddress", uintptr_t, return *reinterpret_cast<uintptr_t*>(info), return 0, bool info);
+    EXPORT_FUNCTION_MACRO("getBoolean", bool, return *reinterpret_cast<bool*>(info), return false, uintptr_t info);
+    EXPORT_FUNCTION_MACRO("getString", std::string, return *reinterpret_cast<std::string*>(info), return "", uintptr_t info);
+    EXPORT_FUNCTION_MACRO("getRawAddress", uintptr_t, return *reinterpret_cast<uintptr_t*>(info), return 0, uintptr_t info);
 
     GET_ADDRESS_MACRO(Player);
     GET_ADDRESS_MACRO(Actor);
@@ -261,5 +264,6 @@ void LseExport::exportEvent() {
     GET_ADDRESS_MACRO(BlockActor);
     GET_ADDRESS_MACRO(Container);
     GET_ADDRESS_MACRO(CompoundTag);
+    // clang-format on
 }
 } // namespace ila

@@ -9,16 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+
+### Fixed
+
+
+### Changed
+
+
+
+## [0.1.5] - 2024-04-03
+
+### Added
+
 - Added forEach, filter, map, find, some, every, reduce for NbtList @zimuya4153
 - Added getEventName and getEventAlias function @zimuya4153
 
 ### Fixed
 
 - Fixed iterator index for NbtList @zimuya4153
+- Fixed d.ts type @zimuya4153
+- Fixed getBoolean, getString, getRawAddress function @zimuya4153
 
 ### Changed
 
 - Changed the event alias to dynamically generated @zimuya4153
+- Optimized code @zimuya4153
 
 
 ## [0.1.4] - 2024-03-08
