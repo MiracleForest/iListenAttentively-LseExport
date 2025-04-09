@@ -269,7 +269,7 @@ export function getAddress(
     target: Entity | Player | Item | Block | BlockEntity | Container | CompoundTag
 ): number | undefined;
 
-declare let nbtProxyHandler: ProxyHandler<any>;
+declare let nbtProxyHandler: ProxyHandler<NbtCompound>;
 
 interface NbtList {
     toSNBT(index = -1): string;
