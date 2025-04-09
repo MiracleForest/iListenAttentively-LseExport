@@ -144,7 +144,7 @@ void LseExport::exportEvent() {
     });
     RemoteCall::exportAs(EXPORT_NAMESPACE, "publish", [&](std::string eventName, CompoundTag* data) -> void {
         if (!data) return;
-        auto event = event::LseEvent(data);
+        auto event = event::LseEvent(eventName, data);
         getSelf().getLogger().debug("Publish event {0}, data: {1}", eventName, data->toSnbt());
         LLEventBus.publish(event, ll::event::EventIdView(eventName));
     });
@@ -153,7 +153,7 @@ void LseExport::exportEvent() {
         "publishToMod",
         [&](std::string modName, std::string eventName, CompoundTag* data) -> void {
             if (!data) return;
-            auto event = event::LseEvent(data);
+            auto event = event::LseEvent(eventName, data);
             getSelf()
                 .getLogger()
                 .debug("Publish event {0} to {1} plugin, data: {1}", eventName, modName, data->toSnbt());

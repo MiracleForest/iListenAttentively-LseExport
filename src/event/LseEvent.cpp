@@ -23,7 +23,8 @@ void LseEvent::deserialize(CompoundTag const& nbt) {
     }
 }
 
-CompoundTag* LseEvent::getData() const { return mData; }
+ll::event::EventId LseEvent::getId() const { return ll::event::EventId(mEventName); }
+CompoundTag*       LseEvent::getData() const { return mData; }
 
 class LseEventEmitter : public ll::event::Emitter<[](auto&&...) { return nullptr; }, LseEvent> {};
 
