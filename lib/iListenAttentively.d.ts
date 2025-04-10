@@ -90,7 +90,7 @@ export function hasListener(
  * @description 请务必在事件名前面加一些信息用于区分   
  * 例如：`"pluginName::eventName"`   
  * 如需要分类，可以使用`"pluginName::category::eventName"`   
- * 或需要更深层分类可以如`"pluginName::category1::category2::category3::eventName"`   
+ * 或需要更深层分类可以如`"pluginName::category1::category2::category3::eventName"`
  * 至于为什么需要加前缀，是因为事件名是全局的，如果两个插件注册了相同的事件名，就会导致冲突
  */
 export function RegisterEvent(
@@ -103,7 +103,7 @@ export function publish(
     /** 事件名 */
     eventName: EventName,
     /** 事件数据 */
-    eventData: NbtCompound
+    eventData: NbtCompound | Record<string, any>
 ): void;
 
 /** 推送事件到指定模组 */
@@ -111,7 +111,7 @@ export function publish(
     /** 事件名 */
     eventName: EventName,
     /** 事件数据 */
-    eventData: NbtCompound,
+    eventData: NbtCompound | Record<string, any>,
     /** 模组名 */
     modName: string
 ): void;

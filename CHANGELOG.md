@@ -16,6 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 
+## [0.1.6] - 2024-04-10
+
+### Added
+
+- Added type check for get function @zimuya4153
+
+### Fixed
+
+- Fixed getPluginName function @zimuya4153
+- Fixed d.ts type @zimuya4153
+- Fixed eventId for custom event @zimuya4153
+
+### Changed
+
+- Enhanced publish method @zimuya4153
+
 
 ## [0.1.5] - 2024-04-03
 
@@ -100,7 +116,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initialize the module @zimuya4153
 
-[Unreleased]: https://github.com/MiracleForest/iListenAttentively/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/MiracleForest/iListenAttentively/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.1.2...v0.1.3
