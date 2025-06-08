@@ -3,10 +3,6 @@
 
 namespace ila {
 
-extern std::unordered_map<std::string, std::string> mEventNameAlias;
-
-void exportEvent();
-
 class LseExport {
 
 public:

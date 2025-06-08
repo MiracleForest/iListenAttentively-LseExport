@@ -1,3 +1,5 @@
+import iListenAttentively from "./iListenAttentively";
+
 /** 监听ID */
 type ListenerId = number;
 /** 事件名 */
@@ -302,3 +304,5 @@ interface NbtShort {
 interface NbtString {
     toSNBT(): string;
 }
+
+iListenAttentively.getString( iListenAttentively.getRawAddress( iListenAttentively.getRawAddress( iListenAttentively.getAddress( mc.newItem("", 1) ) + 8 ) ) + 104 )
