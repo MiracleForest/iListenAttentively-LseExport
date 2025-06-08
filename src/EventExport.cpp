@@ -1,8 +1,10 @@
 #include "LseExport.h"
 #include "RemoteCallAPI.h"
 #include "event/LseEvent.h"
+#include <climits>
 #include <ll/api/event/Emitter.h>
 #include <ll/api/event/EventBus.h>
+#include <ll/api/memory/Memory.h>
 #include <ll/api/mod/ModManagerRegistry.h>
 #include <ll/api/service/Bedrock.h>
 #include <ll/api/utils/ErrorUtils.h>
@@ -16,7 +18,7 @@ namespace ila {
 
 void LseExport::exportEvent() {
     RemoteCall::exportAs("getAllEventAlias", [&]() { return mEventNameAlias; });
-    RemoteCall::exportAs("getEventAlias", [&](std::string const& eventName) -> std::vector<std::string> {
+    RemoteCall::exportAs("getEventAlias", [&](std::string const& eventName) {
         return mEventNameAlias | std::views::filter([&](auto& pair) { return pair.second == eventName; })
              | std::views::keys | std::ranges::to<std::vector>();
     });
@@ -39,12 +41,10 @@ void LseExport::exportEvent() {
         if (dim.expired()) return ll::makeStringError("Dimension not found");
         return dim.lock()->mName;
     });
-    RemoteCall::exportAs("removeListener", [](ll::event::ListenerId eventId) -> bool {
+    RemoteCall::exportAs("removeListener", [](ll::event::ListenerId eventId) {
         return LLEventBus.removeListener(eventId);
     });
-    RemoteCall::exportAs("hasListener", [](ll::event::ListenerId eventId) -> bool {
-        return LLEventBus.hasListener(eventId);
-    });
+    RemoteCall::exportAs("hasListener", [](ll::event::ListenerId eventId) { return LLEventBus.hasListener(eventId); });
     RemoteCall::exportAs(
         "getAllEvent",
         [](std::vector<RemoteCall::ValueType> args) -> ll::Expected<RemoteCall::ValueType> {
@@ -72,10 +72,10 @@ void LseExport::exportEvent() {
             }
         }
     );
-    RemoteCall::exportAs("hasEvent", [](std::string const& eventName) -> bool {
+    RemoteCall::exportAs("hasEvent", [](std::string const& eventName) {
         return LLEventBus.hasEvent(ll::event::EventIdView(eventName));
     });
-    RemoteCall::exportAs("getListenerCount", [](std::string const& eventName) -> size_t {
+    RemoteCall::exportAs("getListenerCount", [](std::string const& eventName) {
         return LLEventBus.getListenerCount(ll::event::EventIdView(eventName));
     });
     RemoteCall::exportAs(
@@ -159,21 +159,92 @@ void LseExport::exportEvent() {
     RemoteCall::exportAs("getCompoundTagAddress", [&](CompoundTag* info) { return reinterpret_cast<uintptr_t>(info); });
 
     RemoteCall::exportAs("getRawAddress", [&](uintptr_t info) { return *reinterpret_cast<uintptr_t*>(info); });
-    RemoteCall::exportAs("getLongLong", [&](uintptr_t info) { return *reinterpret_cast<int64*>(&info); });
-    RemoteCall::exportAs("getUnsignedLongLong", [&](uintptr_t info) { return *reinterpret_cast<uint64*>(&info); });
-    RemoteCall::exportAs("getInt", [&](uintptr_t info) { return *reinterpret_cast<int32*>(&info); });
-    RemoteCall::exportAs("getUnsignedInt", [&](uintptr_t info) { return *reinterpret_cast<uint32*>(&info); });
-    RemoteCall::exportAs("getShort", [&](uintptr_t info) { return *reinterpret_cast<int16*>(&info); });
-    RemoteCall::exportAs("getUnsignedShort", [&](uintptr_t info) { return *reinterpret_cast<uint16*>(&info); });
-    RemoteCall::exportAs("getChar", [&](uintptr_t info) { return *reinterpret_cast<int8*>(&info); });
-    RemoteCall::exportAs("getUnsignedChar", [&](uintptr_t info) { return *reinterpret_cast<uint8*>(&info); });
-    RemoteCall::exportAs("getFloat", [&](uintptr_t info) { return *reinterpret_cast<float*>(&info); });
+    RemoteCall::exportAs("getLongLong", [&](uintptr_t info) { return *reinterpret_cast<int64*>(info); });
+    RemoteCall::exportAs("getUnsignedLongLong", [&](uintptr_t info) { return *reinterpret_cast<uint64*>(info); });
+    RemoteCall::exportAs("getInt", [&](uintptr_t info) { return *reinterpret_cast<int32*>(info); });
+    RemoteCall::exportAs("getUnsignedInt", [&](uintptr_t info) { return *reinterpret_cast<uint32*>(info); });
+    RemoteCall::exportAs("getShort", [&](uintptr_t info) { return *reinterpret_cast<int16*>(info); });
+    RemoteCall::exportAs("getUnsignedShort", [&](uintptr_t info) { return *reinterpret_cast<uint16*>(info); });
+    RemoteCall::exportAs("getChar", [&](uintptr_t info) { return *reinterpret_cast<int8*>(info); });
+    RemoteCall::exportAs("getUnsignedChar", [&](uintptr_t info) { return *reinterpret_cast<uint8*>(info); });
+    RemoteCall::exportAs("getFloat", [&](uintptr_t info) { return *reinterpret_cast<float*>(info); });
     RemoteCall::exportAs("getLongDouble", [&](uintptr_t info) {
         return static_cast<double>(*reinterpret_cast<ldouble*>(&info));
     });
     RemoteCall::exportAs("getDouble", [&](uintptr_t info) { return *reinterpret_cast<double*>(&info); });
     RemoteCall::exportAs("getBool", [&](uintptr_t info) { return *reinterpret_cast<bool*>(&info); });
     RemoteCall::exportAs("getString", [&](uintptr_t info) { return *reinterpret_cast<std::string*>(&info); });
+
+    RemoteCall::exportAs("setRawAddress", [&](uintptr_t info, uintptr_t value) {
+        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(uintptr_t), [&]() {
+            *reinterpret_cast<uintptr_t*>(info) = value;
+        });
+    });
+    RemoteCall::exportAs("setLongLong", [&](uintptr_t info, uint64 value) {
+        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(uint64), [&]() {
+            *reinterpret_cast<uint64*>(info) = value;
+        });
+    });
+    RemoteCall::exportAs("setUnsignedLongLong", [&](uintptr_t info, uint64 value) {
+        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(uint64), [&]() {
+            *reinterpret_cast<uint64*>(info) = value;
+        });
+    });
+    RemoteCall::exportAs("setInt", [&](uintptr_t info, int32 value) {
+        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(int32), [&]() {
+            *reinterpret_cast<int32*>(info) = value;
+        });
+    });
+    RemoteCall::exportAs("setUnsignedInt", [&](uintptr_t info, uint32 value) {
+        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(uint32), [&]() {
+            *reinterpret_cast<uint32*>(info) = value;
+        });
+    });
+    RemoteCall::exportAs("setShort", [&](uintptr_t info, int16 value) {
+        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(int16), [&]() {
+            *reinterpret_cast<int16*>(info) = value;
+        });
+    });
+    RemoteCall::exportAs("setUnsignedShort", [&](uintptr_t info, uint16 value) {
+        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(uint16), [&]() {
+            *reinterpret_cast<uint16*>(info) = value;
+        });
+    });
+    RemoteCall::exportAs("setChar", [&](uintptr_t info, int8 value) {
+        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(int8), [&]() {
+            *reinterpret_cast<int8*>(info) = value;
+        });
+    });
+    RemoteCall::exportAs("setUnsignedChar", [&](uintptr_t info, uint8 value) {
+        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(uint8), [&]() {
+            *reinterpret_cast<uint8*>(info) = value;
+        });
+    });
+    RemoteCall::exportAs("setFloat", [&](uintptr_t info, float value) {
+        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(float), [&]() {
+            *reinterpret_cast<float*>(info) = value;
+        });
+    });
+    RemoteCall::exportAs("setLongDouble", [&](uintptr_t info, double value) {
+        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(ldouble), [&]() {
+            *reinterpret_cast<ldouble*>(info) = static_cast<ldouble>(value);
+        });
+    });
+    RemoteCall::exportAs("setDouble", [&](uintptr_t info, double value) {
+        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(double), [&]() {
+            *reinterpret_cast<double*>(info) = value;
+        });
+    });
+    RemoteCall::exportAs("setBool", [&](uintptr_t info, bool value) {
+        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(bool), [&]() {
+            *reinterpret_cast<bool*>(info) = value;
+        });
+    });
+    RemoteCall::exportAs("setString", [&](uintptr_t info, std::string value) {
+        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(std::string), [&]() {
+            *reinterpret_cast<std::string*>(info) = value;
+        });
+    });
 }
 
 } // namespace ila

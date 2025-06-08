@@ -441,11 +441,21 @@ _exportAs(std::string const& funcName, std::function<RTN(Args...)>&& callback) {
                 }
             } else {
                 if constexpr (requires { callback(args); }) {
-                    return pack(ll::Expected<RTN>(callback(args)));
+                    if constexpr (std::is_void_v<RTN>) {
+                        callback(args);
+                        return pack(ll::Expected<>());
+                    } else {
+                        return pack(ll::Expected<RTN>(callback(args)));
+                    }
                 } else {
-                    if (sizeof...(Args) != args.size())
-                        return pack(ll::Expected<RTN>(ll::makeStringError("Invalid argument")));
-                    return pack(ll::Expected<RTN>(callback(extract<Args>(_expandArg(args, index))...)));
+                    if constexpr (std::is_void_v<RTN>) {
+                        if (sizeof...(Args) != args.size()) return pack(ll::Expected<>());
+                        callback(extract<Args>(_expandArg(args, index))...);
+                        return pack(ll::Expected<>());
+                    } else {
+                        if (sizeof...(Args) != args.size()) return pack(ll::Expected<RTN>(ll::makeStringError("Invalid argument")));
+                        return pack(ll::Expected<RTN>(callback(extract<Args>(_expandArg(args, index))...)));
+                    }
                 }
             }
         } catch (...) {
