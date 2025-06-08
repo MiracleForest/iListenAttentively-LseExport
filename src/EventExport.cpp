@@ -11,6 +11,7 @@
 #include <mc/world/level/Level.h>
 #include <mc/world/level/dimension/Dimension.h>
 #include <mc/world/level/dimension/VanillaDimensions.h>
+#include <windows.h>
 
 #define LLEventBus ll::event::EventBus::getInstance()
 
@@ -245,6 +246,51 @@ void LseExport::exportEvent() {
             *reinterpret_cast<std::string*>(info) = value;
         });
     });
+
+    RemoteCall::exportAs(
+        "getAddressFromSymbol",
+        [&](std::vector<RemoteCall::ValueType> args) -> ll::Expected<uintptr_t> {
+            switch (args.size()) {
+            case 1:
+                return reinterpret_cast<uintptr_t>(
+                    ll::memory::Symbol(RemoteCall::extract<std::string>(std::move(args[0]))).view().resolve(true)
+                );
+            case 2:
+                return reinterpret_cast<uintptr_t>(GetProcAddress(
+                    GetModuleHandle(
+                        ll::string_utils::str2wstr(RemoteCall::extract<std::string>(std::move(args[0]))).c_str()
+                    ),
+                    RemoteCall::extract<std::string>(std::move(args[1])).c_str()
+                ));
+            default:
+                return ll::makeStringError("Too many arguments");
+            }
+        }
+    );
+    RemoteCall::exportAs(
+        "getAddressFromSignature",
+        [&](std::vector<RemoteCall::ValueType> args) -> ll::Expected<uintptr_t> {
+            switch (args.size()) {
+            case 1:
+                return reinterpret_cast<uintptr_t>(
+                    ll::memory::Signature::parse(RemoteCall::extract<std::string>(std::move(args[0])))
+                        .view()
+                        .resolve(true)
+                );
+            case 2:
+                return reinterpret_cast<uintptr_t>(
+                    ll::memory::Signature::parse(RemoteCall::extract<std::string>(std::move(args[0])))
+                        .view()
+                        .resolve(
+                            ll::sys_utils::getImageRange(RemoteCall::extract<std::string>(std::move(args[1]))),
+                            true
+                        )
+                );
+            default:
+                return ll::makeStringError("Too many arguments");
+            }
+        }
+    );
 }
 
 } // namespace ila
