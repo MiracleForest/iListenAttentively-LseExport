@@ -18,12 +18,25 @@
 #include <unordered_map>
 #include <windows.h>
 
-
 #define LLEventBus ll::event::EventBus::getInstance()
 
 namespace ila {
 
 void LseExport::exportEvent() {
+    RemoteCall::exportAs("toSnbt", [&](CompoundTag* nbt, uint snbtFormat, uchar indent) -> ll::Expected<std::string> {
+        if (!nbt) return ll::makeStringError("NBT is null");
+        if (!nbt->contains("value")) return ll::makeStringError("NBT is empty");
+        return (*nbt)["value"].toSnbt(static_cast<SnbtFormat>(snbtFormat), indent);
+    });
+    RemoteCall::exportAs("fromSnbt", [&](std::string const& snbt) {
+        return CompoundTagVariant::parse(snbt).transform(
+            [](CompoundTagVariant const& nbt) -> std::unique_ptr<CompoundTag> {
+                auto result = std::make_unique<CompoundTag>();
+                (*result)["value"] = nbt;
+                return std::move(result);
+            }
+        );
+    });
     RemoteCall::exportAs("getAllEventAlias", [&]() { return mEventNameAlias; });
     RemoteCall::exportAs("getEventAlias", [&](std::string const& eventName) {
         return mEventNameAlias | std::views::filter([&](auto& pair) { return pair.second == eventName; })
