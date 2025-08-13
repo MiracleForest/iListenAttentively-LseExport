@@ -1,308 +1,368 @@
-import iListenAttentively from "./iListenAttentively";
+declare module "iListenAttentively" {
+    type NbtTypes =
+        | NbtByte
+        | NbtShort
+        | NbtInt
+        | NbtLong
+        | NbtFloat
+        | NbtDouble
+        | NbtString
+        | NbtByteArray
+        | NbtList
+        | NbtCompound;
 
-/** 监听ID */
-type ListenerId = number;
-/** 事件名 */
-type EventName = string;
+    type ProxiedNbt = {
+        /** 读取/设置某个下标位置的NBT对象 */
+        [key: string | number]: ProxiedNbt
+        /** 读取某个下标位置的NBT对象 */
+        get(key: string | number): ProxiedNbt | undefined;
+        /** 设置某个下标位置的NBT对象 */
+        set(key: string | number, value: any): boolean;
+        /** 删除某个下标位置的NBT对象 */
+        remove(key: string | number): boolean;
+        /** 添加一个NBT对象(仅对NbtList有效) */
+        add(value: any): number;
+        /** 将NBT对象转换为SNBT格式字符串 */
+        toSnbt(snbtFormat?: SnbtFormat, indent?: number): string;
+        /** 判断NBT对象类型 */
+        hold(type: NbtType): boolean;
+        /** 判断NBT对象是否为列表 */
+        isArray(): boolean;
+        /** 判断NBT对象是否为复合 */
+        isObject(): boolean;
+        /** 判断NBT对象是否为字符串 */
+        isString(): boolean;
+        /** 判断NBT对象是否为字节 */
+        isBoolean(): boolean;
+        /** 判断NBT对象是否为浮点数 */
+        isNumberFloat(): boolean;
+        /** 判断NBT对象是否为整数 */
+        isNumberInteger(): boolean;
+        /** 判断NBT对象是否为数字 */
+        isNumber(): boolean;
+        /** 判断NBT对象是否基础类型 */
+        isPrimitive(): boolean;
+        /** 判断是否包含某个下标的NBT对象(仅对NbtCompound有效) */
+        contains(key: string | number, type?: NbtType): boolean;
+        /** 获取NBT对象的大小 */
+        size(): number;
+        [Symbol.iterator](): IterableIterator<[string | number, ProxiedNbt]>;
+    } & NbtTypes;
 
-/** 事件优先级 */
-export enum EventPriority {
-    /** 最高 */
-    Highest = 0,
-    /** 高 */
-    High = 100,
-    /** 默认 */
-    Normal = 200,
-    /** 低 */
-    Low = 300,
-    /** 最低 */
-    Lowest = 400,
-};
+    /** 全局导出命名空间 */
+    const NamespaceName: string;
 
-/** 获取自身插件名 */
-export function getPluginName(): string;
-
-/** 获取所有事件别名 */
-export function getAllEventAlias(): Record<EventName, EventName>;
-
-/** 获取事件别名 */
-export function getEventAlias(
-    /** 事件名 */
-    eventName: EventName
-): EventName[];
-
-/** 通过事件别名获取事件名 */
-export function getEventName(
-    /** 事件别名 */
-    eventAlias: EventName
-): EventName;
-
-/** 通过维度名字获取ID */
-export function getDimensionNameFromId(
-    /** 维度ID */
-    dimensionId: number
-): string | undefined;
-
-/** 通过维度ID获取名字 */
-export function getDimensionIdFromName(
-    /** 维度名字 */
-    dimensionName: string
-): number | undefined;
-
-/** 获取所有已注册事件 */
-export function getAllEvent(): {
-    /** 事件名 */
-    eventName: EventName,
-    /** 模组名 */
-    modName: string
-}[];
-
-/** 获取指定插件的已注册事件 */
-export function getAllEvent(
-    /** 模组名 */
-    modName: string
-): EventName[];
-
-/** 获取事件监听数量 */
-export function getListenerCount(
-    /** 事件名 */
-    eventName: EventName
-): number;
-
-/** 删除事件监听 */
-export function removeListener(
-    /** 监听ID */
-    listenerId: ListenerId
-): Boolean;
-
-/** 是否存在事件 */
-export function hasEvent(
-    /** 事件名 */
-    eventName: EventName
-): Boolean;
-
-/** 是否存在监听 */
-export function hasListener(
-    /** 监听ID */
-    listenerId: ListenerId
-): Boolean;
-
-/** 
- * 注册事件(需在自身插件加载完后注册)
- * @description 请务必在事件名前面加一些信息用于区分   
- * 例如：`"pluginName::eventName"`   
- * 如需要分类，可以使用`"pluginName::category::eventName"`   
- * 或需要更深层分类可以如`"pluginName::category1::category2::category3::eventName"`
- * 至于为什么需要加前缀，是因为事件名是全局的，如果两个插件注册了相同的事件名，就会导致冲突
- */
-export function registerEvent(
-    /** 事件名 */
-    eventName: EventName
-): Boolean;
-
-/** 推送事件 */
-export function publish(
-    /** 事件名 */
-    eventName: EventName,
-    /** 事件数据 */
-    eventData: NbtCompound | Record<string, any>
-): void;
-
-/** 推送事件到指定模组 */
-export function publish(
-    /** 事件名 */
-    eventName: EventName,
-    /** 事件数据 */
-    eventData: NbtCompound | Record<string, any>,
-    /** 模组名 */
-    modName: string
-): void;
-
-interface EventListenerData extends NbtCompound extends NbtList {
-    [key: string | number]: EventListenerData | undefined;
-    [Symbol.iterator]: () => Iterator<[string | number, EventListenerData]>;
-
-    toSNBT(index = -1): string;
-}
-
-/** 安装事件监听(需事件注册后安装) */
-export function emplaceListener(
-    /** 事件名 */
-    eventName: EventName,
-    /** 回调函数 */
-    callback: (
-        /** 事件数据 */
-        event: EventListenerData
-    ) => void,
     /** 事件优先级 */
-    priority: EventPriority.Normal = EventPriority.Normal,
-    /** 模组名 */
-    modName: string | undefined = getPluginName()
-): ListenerId;
+    enum EventPriority {
+        /** 最高 */
+        Highest = 0,
+        /** 高 */
+        High = 100,
+        /** 默认 */
+        Normal = 200,
+        /** 低 */
+        Low = 300,
+        /** 最低 */
+        Lowest = 400,
+    };
 
-/** 根据内存地址/序列化信息获取玩家 */
-export function getPlayer(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): Player | undefined;
+    /** 原生类型 */
+    enum NativeType {
+        Void = 0,
+        Bool = 1,
+        Char = 2,
+        UnsignedChar = 3,
+        Short = 4,
+        UnsignedShort = 5,
+        Int = 6,
+        UnsignedInt = 7,
+        Long = 8,
+        UnsignedLong = 9,
+        LongLong = 10,
+        UnsignedLongLong = 11,
+        Float = 12,
+        Double = 13,
+        LongDouble = 14,
+        Pointer = 15,
+    };
 
-/** 根据内存地址/序列化信息获取实体 */
-export function getActor(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): Entity | undefined;
+    /** SNBT格式 */
+    enum SnbtFormat {
+        Minimize = 0,
+        CompoundLineFeed = 1 << 0,
+        ArrayLineFeed = 1 << 1,
+        Colored = 1 << 2,
+        Console = 1 << 3,
+        ForceAscii = 1 << 4,
+        ForceQuote = 1 << 5,
+        CommentMarks = 1 << 6,
+        Jsonify = ForceQuote | CommentMarks,
+        PartialLineFeed = CompoundLineFeed,
+        AlwaysLineFeed = CompoundLineFeed | ArrayLineFeed,
+        PrettyFilePrint = PartialLineFeed,
+        PrettyChatPrint = PrettyFilePrint | Colored,
+        PrettyConsolePrint = PrettyFilePrint | Colored | Console
+    };
 
-/** 根据内存地址/序列化信息获取物品 */
-export function getItemStack(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): Item | undefined;
+    /** NBT类型 */
+    enum NbtType {
+        End = 0,
+        Byte = 1,
+        Short = 2,
+        Int = 3,
+        Int64 = 4,
+        Float = 5,
+        Double = 6,
+        ByteArray = 7,
+        String = 8,
+        List = 9,
+        Compound = 10,
+        IntArray = 11,
+    };
 
-/** 根据内存地址/序列化信息获取方块 */
-export function getBlock(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): Block | undefined;
+    const NbtProxy: {
+        FunctionMap: {
+            get(target: any): (key: any) => any;
+            set(target: any): (key: any, value: any) => boolean;
+            remove(target: any): (key: any) => boolean;
+            add(target: any): (value: any) => number;
+            toSnbt(target: any): (...args: any[]) => string;
+            hold(target: any): (type: number) => boolean;
+            isArray(target: any): () => boolean;
+            isObject(target: any): () => boolean;
+            isString(target: any): () => boolean;
+            isBoolean(target: any): () => boolean;
+            isNumberFloat(target: any): () => boolean;
+            isNumberInteger(target: any): () => boolean;
+            isNumber(target: any): () => boolean;
+            isPrimitive(target: any): () => boolean;
+            contains(target: any): (key: any, type?: number) => boolean;
+            size(target: any): () => number;
+            [Symbol.iterator](target: any): () => Generator<[any, any], void, unknown>;
+        };
+        get(target: any, key: any): any;
+        set(target: any, key: any, value: any): boolean;
+        deleteProperty(target: any, key: any): boolean;
+        has(target: any, key: any): boolean;
+        ownKeys(target: any): string[] | number[];
+    };
 
-/** 根据内存地址/序列化信息获取方块实体 */
-export function getBlockActor(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): BlockEntity | undefined;
+    /** 判断一个对象是否为NBT */
+    function isNbt(data: any): data is NbtTypes;
+    /** 将一个对象转换为NBT */
+    function toNbt(data: any): NbtTypes;
+    /** 将一个NBT转换为对象 */
+    function fromNbt(data: NbtTypes): any;
+    /** 将一个NBT转换为SNBT字符串 */
+    function toSnbt(data: NbtTypes, snbtFormat?: SnbtFormat, indent?: number): string;
+    /** 将一个SNBT字符串转换为NBT */
+    function fromSnbt(snbt: string): NbtTypes;
+    /** 调用插件导出的函数 */
+    function callExportedFunction(functionName: string, ...args: any[]): any;
+    /** 获取自身插件名称 */
+    function getPluginName(): string;
+    /** 
+     * 注册事件(需在自身插件加载完后注册,建议使用setTimeout)
+     * @description 请务必在事件名前面加一些信息用于区分   
+     * 例如：`"pluginName::eventName"`   
+     * 如需要分类，可以使用`"pluginName::category::eventName"`   
+     * 或需要更深层分类可以如`"pluginName::category1::category2::category3::eventName"`
+     * 至于为什么需要加前缀，是因为事件名是全局的，如果两个插件注册了相同的事件名，就会导致冲突
+     */
+    function registerEvent(eventName: string, pluginName?: string): boolean;
+    /** @deprecated */
+    function RegisterEvent(eventName: string, pluginName?: string): any;
+    /** 监听事件 */
+    function emplaceListener(
+        eventName: string,
+        callback: (event: ProxiedNbt) => void,
+        priority?: EventPriority,
+        pluginName?: string
+    ): number;
+    /** 推送事件 */
+    function publish(eventName: string, eventData: Record<string, any> | NbtCompound, modName?: string): void;
 
-/** 根据内存地址/序列化信息获取容器 */
-export function getContainer(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): Container | undefined;
+    /** 获取所有事件别名 */
+    function getAllEventAlias(): Record<string, string>;
+    /** 获取事件别名 */
+    function getEventAlias(eventName: string): string[];
+    /** 通过事件别名获取事件名 */
+    function getEventName(eventAlias: string): string;
+    /** 通过维度名字获得维度ID */
+    function getDimensionIdFromName(dimensionName: string): number;
+    /** 通过维度ID获得维度名字 */
+    function getDimensionNameFromId(dimensionId: number): string;
+    /** 取消监听事件 */
+    function removeListener(listenerId: number): boolean;
+    /** 是否存在监听 */
+    function hasListener(listenerId: number): boolean;
+    /** 获取所有事件 */
+    function getAllEvent(): { eventName: string, modName: string }[];
+    /** 通过插件名获取事件 */
+    function getAllEvent(modName: string): string[];
+    /** 判断是否存在事件 */
+    function hasEvent(eventName: string): boolean;
+    /** 获取事件监听数量 */
+    function getListenerCount(eventName: string): number;
 
-/** 根据内存地址/序列化信息获取NBT */
-export function getCompoundTag(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): NbtCompound | undefined;
+    /** 获取玩家 */
+    function getPlayer(data: NbtCompound | number): Player | undefined;
+    /** 获取实体 */
+    function getActor(data: NbtCompound | number): Entity | undefined;
+    /** 获取物品 */
+    function getItemStack(data: NbtCompound | number): Item | undefined;
+    /** 获取方块 */
+    function getBlock(data: NbtCompound | number): Block | undefined;
+    /** 获取方块实体 */
+    function getBlockActor(data: NbtCompound | number): BlockEntity | undefined;
+    /** 获取容器 */
+    function getContainer(data: NbtCompound | number): Container | undefined;
+    /** 获取NBT */
+    function getCompoundTag(data: NbtCompound | number): NbtCompound | undefined;
 
-/** 根据内存地址/序列化信息获取数字 */
-export function getLongLong(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): number;
+    /** 获取玩家地址 */
+    function getPlayerAddress(data: Player): number;
+    /** 获取实体地址 */
+    function getActorAddress(data: Entity): number;
+    /** 获取物品地址 */
+    function getItemStackAddress(data: Item): number;
+    /** 获取方块地址 */
+    function getBlockAddress(data: Block): number;
+    /** 获取方块实体地址 */
+    function getBlockActorAddress(data: BlockEntity): number;
+    /** 获取容器地址 */
+    function getContainerAddress(data: Container): number;
+    /** 获取NBT地址 */
+    function getCompoundTagAddress(data: NbtCompound): number;
 
-/** 根据内存地址/序列化信息获取数字 */
-export function getUnsignedLongLong(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): number;
+    function getRawAddress(address: number): any;
+    function getLongLong(address: number): any;
+    function getUnsignedLongLong(address: number): any;
+    function getInt(address: number): any;
+    function getUnsignedInt(address: number): any;
+    function getShort(address: number): any;
+    function getUnsignedShort(address: number): any;
+    function getChar(address: number): any;
+    function getUnsignedChar(address: number): any;
+    function getFloat(address: number): any;
+    function getLongDouble(address: number): any;
+    function getDouble(address: number): any;
+    function getBool(address: number): any;
+    function getString(address: number): any;
 
-/** 根据内存地址/序列化信息获取数字 */
-export function getInt(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): number;
+    function setRawAddress(address: number, data: number): any;
+    function setLongLong(address: number, data: number): any;
+    function setUnsignedLongLong(address: number, data: number): any;
+    function setInt(address: number, data: number): any;
+    function setUnsignedInt(address: number, data: number): any;
+    function setShort(address: number, data: number): any;
+    function setUnsignedShort(address: number, data: number): any;
+    function setChar(address: number, data: number): any;
+    function setUnsignedChar(address: number, data: number): any;
+    function setFloat(address: number, data: number): any;
+    function setLongDouble(address: number, data: number): any;
+    function setDouble(address: number, data: number): any;
+    function setBool(address: number, data: number): any;
+    function setString(address: number, data: number): any;
 
-/** 根据内存地址/序列化信息获取数字 */
-export function getUnsignedInt(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): number;
+    function getAddressFromSymbol(symbol: string): number;
+    function getAddressFromSymbol(dllNmae: string, symbol: string): number;
+    function getAddressFromSignature(signature: string): number;
+    function getAddressFromSignature(dllName: string, signature: string): number;
+    function getImageRange(dllName: string): { start: number, end: number, size: number };
+    function dynamicCall(address: number, returnType: NativeType, paramsType: NativeType[], params: number[]): any;
+    function mallocMemory(size: number): number;
+    function freeMemory(address: number): void;
+    function alignedMallocMemory(size: number, alignment: number): number;
+    function alignedFreeMemory(address: number): void;
+    function getUsableMemorySize(address: number): number;
+    function memcpyMemory(dest: number, src: number, size: number): void;
+    function memsetMemory(dest: number, value: number, size: number): void;
+    function memcmpMemory(dest: number, src: number, size: number): number;
+    function memmoveMemory(dest: number, src: number, size: number): number;
 
-/** 根据内存地址/序列化信息获取数字 */
-export function getShort(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): number;
-
-/** 根据内存地址/序列化信息获取数字 */
-export function getUnsignedShort(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): number;
-
-/** 根据内存地址/序列化信息获取数字 */
-export function getChar(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): number;
-
-/** 根据内存地址/序列化信息获取数字 */
-export function getUnsignedChar(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): number;
-
-/** 根据内存地址/序列化信息获取浮点数 */
-export function getFloat(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): number;
-
-/** 根据内存地址/序列化信息获取浮点数 */
-export function getDouble(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): number;
-
-/** 根据内存地址/序列化信息获取浮点数 */
-export function getLongDouble(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): number;
-
-/** 根据内存地址/序列化信息获取布尔值 */
-export function getBoolean(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): Boolean;
-
-/** 根据内存地址/序列化信息获取字符串 */
-export function getString(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): string;
-
-/** 根据内存地址/序列化信息获取指针原始地址 */
-export function getRawAddress(
-    /** 地址/序列化信息 */
-    info: number | NbtCompound | EventListenerData
-): number | undefined;
-
-/** 获取实体/玩家/物品/方块/方块实体/容器/NBT地址 */
-export function getAddress(
-    target: Entity | Player | Item | Block | BlockEntity | Container | CompoundTag
-): number | undefined;
-
-declare let nbtProxyHandler: ProxyHandler<NbtCompound>;
-
-interface NbtList {
-    toSNBT(index = -1): string;
-    forEach(callback: (value: any, index: number, array: NbtList) => void): void;
-    filter(callback: (value: any, index: number, array: NbtList) => Boolean): NbtList;
-    map(callback: (value: any, index: number, array: NbtList) => any): NbtList;
-    find(callback: (value: any, index: number, array: NbtList) => Boolean): any;
-    some(callback: (value: any, index: number, array: NbtList) => Boolean): Boolean;
-    every(callback: (value: any, index: number, array: NbtList) => Boolean): Boolean;
-    reduce<T = any>(callback: (accumulator: T, value: any, index: number, array: NbtList) => any, initialValue?: T): T;
+    export = {
+        NamespaceName,
+        EventPriority,
+        NativeType,
+        SnbtFormat,
+        NbtProxy,
+        NbtType,
+        isNbt,
+        toNbt,
+        fromNbt,
+        toSnbt,
+        fromSnbt,
+        callExportedFunction,
+        getPluginName,
+        registerEvent,
+        RegisterEvent,
+        emplaceListener,
+        publish,
+        getAllEventAlias,
+        getEventAlias,
+        getEventName,
+        getDimensionIdFromName,
+        getDimensionNameFromId,
+        removeListener,
+        hasListener,
+        getAllEvent,
+        hasEvent,
+        getListenerCount,
+        getPlayer,
+        getActor,
+        getItemStack,
+        getBlock,
+        getBlockActor,
+        getContainer,
+        getCompoundTag,
+        getPlayerAddress,
+        getActorAddress,
+        getItemStackAddress,
+        getBlockAddress,
+        getBlockActorAddress,
+        getContainerAddress,
+        getCompoundTagAddress,
+        getRawAddress,
+        getLongLong,
+        getUnsignedLongLong,
+        getInt,
+        getUnsignedInt,
+        getShort,
+        getUnsignedShort,
+        getChar,
+        getUnsignedChar,
+        getFloat,
+        getLongDouble,
+        getDouble,
+        getBool,
+        getString,
+        setRawAddress,
+        setLongLong,
+        setUnsignedLongLong,
+        setInt,
+        setUnsignedInt,
+        setShort,
+        setUnsignedShort,
+        setChar,
+        setUnsignedChar,
+        setFloat,
+        setLongDouble,
+        setDouble,
+        setBool,
+        setString,
+        getAddressFromSymbol,
+        getAddressFromSignature,
+        getImageRange,
+        dynamicCall,
+        mallocMemory,
+        freeMemory,
+        alignedMallocMemory,
+        alignedFreeMemory,
+        getUsableMemorySize,
+        memcpyMemory,
+        memsetMemory,
+        memcmpMemory,
+        memmoveMemory
+    };
 }
-interface NbtByte {
-    toSNBT(): string;
-}
-interface NbtDouble {
-    toSNBT(): string;
-}
-interface NbtFloat {
-    toSNBT(): string;
-}
-interface NbtLong {
-    toSNBT(): string;
-}
-interface NbtInt {
-    toSNBT(): string;
-}
-interface NbtShort {
-    toSNBT(): string;
-}
-interface NbtString {
-    toSNBT(): string;
-}
-
-iListenAttentively.getString( iListenAttentively.getRawAddress( iListenAttentively.getRawAddress( iListenAttentively.getAddress( mc.newItem("", 1) ) + 8 ) ) + 104 )
