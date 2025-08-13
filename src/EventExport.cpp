@@ -99,10 +99,10 @@ void LseExport::exportEvent() {
         return LLEventBus.getListenerCount(ll::event::EventId(eventName));
     });
     RemoteCall::exportAs(
-        "RegisterEvent",
+        "registerEvent",
         [&](std::string const& pluginName, std::string const& eventName) -> ll::Expected<bool> {
             if (eventName.empty()) return ll::makeStringError("Event name cannot be empty");
-            if (auto mod = ll::mod::ModManagerRegistry::getInstance().getMod(pluginName)) {
+            if (auto mod = ll::mod::ModManagerRegistry::getInstance().getMod(pluginName); mod) {
                 return LLEventBus
                     .setEventEmitter([](auto&&...) { return nullptr; }, ll::event::EventId(eventName), mod);
             } else {
@@ -129,7 +129,7 @@ void LseExport::exportEvent() {
     });
     RemoteCall::exportAs(
         "emplaceListener",
-        [&](std::string const& pluginName, std::string eventName, int priority) -> ll::Expected<ll::event::ListenerId> {
+        [&](std::string const& pluginName, std::string const& eventName, int priority) -> ll::Expected<ll::event::ListenerId> {
             auto listenerId = std::make_shared<ll::event::ListenerId>(ULLONG_MAX);
             auto listener   = ll::event::Listener<ll::event::Event>::create(
                 [pluginName, eventName, listenerId, this](ll::event::Event& event) -> void {
@@ -141,8 +141,7 @@ void LseExport::exportEvent() {
                         CompoundTag nbt;
                         event.serialize(nbt);
                         // clang-format off
-                        event.deserialize(*RemoteCall::importAs<CompoundTag*(CompoundTag*)>(pluginName,
-                        funcName)(&nbt));
+                        event.deserialize(*RemoteCall::importAs<CompoundTag*(CompoundTag*)>(pluginName, funcName)(&nbt));
                         // clang-format on
                     } catch (...) {
                         getSelf().getLogger().error(

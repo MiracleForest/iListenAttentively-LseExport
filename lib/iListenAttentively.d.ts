@@ -95,7 +95,7 @@ export function hasListener(
  * 或需要更深层分类可以如`"pluginName::category1::category2::category3::eventName"`
  * 至于为什么需要加前缀，是因为事件名是全局的，如果两个插件注册了相同的事件名，就会导致冲突
  */
-export function RegisterEvent(
+export function registerEvent(
     /** 事件名 */
     eventName: EventName
 ): Boolean;
