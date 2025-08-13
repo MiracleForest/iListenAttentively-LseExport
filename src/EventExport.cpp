@@ -1,17 +1,23 @@
+#define LL_MEMORY_OPERATORS
+
 #include "LseExport.h"
 #include "RemoteCallAPI.h"
 #include "event/LseEvent.h"
 #include <climits>
+#include <dyncall/dyncall.h>
 #include <ll/api/event/Emitter.h>
 #include <ll/api/event/EventBus.h>
 #include <ll/api/memory/Memory.h>
+#include <ll/api/memory/MemoryOperators.h>
 #include <ll/api/mod/ModManagerRegistry.h>
 #include <ll/api/service/Bedrock.h>
 #include <ll/api/utils/ErrorUtils.h>
 #include <mc/world/level/Level.h>
 #include <mc/world/level/dimension/Dimension.h>
 #include <mc/world/level/dimension/VanillaDimensions.h>
+#include <unordered_map>
 #include <windows.h>
+
 
 #define LLEventBus ll::event::EventBus::getInstance()
 
@@ -74,10 +80,10 @@ void LseExport::exportEvent() {
         }
     );
     RemoteCall::exportAs("hasEvent", [](std::string const& eventName) {
-        return LLEventBus.hasEvent(ll::event::EventIdView(eventName));
+        return LLEventBus.hasEvent(ll::event::EventId(eventName));
     });
     RemoteCall::exportAs("getListenerCount", [](std::string const& eventName) {
-        return LLEventBus.getListenerCount(ll::event::EventIdView(eventName));
+        return LLEventBus.getListenerCount(ll::event::EventId(eventName));
     });
     RemoteCall::exportAs(
         "RegisterEvent",
@@ -85,7 +91,7 @@ void LseExport::exportEvent() {
             if (eventName.empty()) return ll::makeStringError("Event name cannot be empty");
             if (auto mod = ll::mod::ModManagerRegistry::getInstance().getMod(pluginName)) {
                 return LLEventBus
-                    .setEventEmitter([](auto&&...) { return nullptr; }, ll::event::EventIdView(eventName), mod);
+                    .setEventEmitter([](auto&&...) { return nullptr; }, ll::event::EventId(eventName), mod);
             } else {
                 return ll::makeStringError(fmt::format("The {0} Mod cannot be obtained", pluginName));
             }
@@ -97,13 +103,15 @@ void LseExport::exportEvent() {
         auto data      = RemoteCall::extract<CompoundTag*>(std::move(args[1]));
         if (!data) return ll::makeStringError("Data is null");
         auto event = event::LseEvent(eventName, data);
-        if (args.size() == 3)
+        if (args.size() == 3){
             LLEventBus.publish(
                 RemoteCall::extract<std::string>(std::move(args[2])),
                 event,
-                ll::event::EventIdView(eventName)
+                ll::event::EventId(eventName)
             );
-        else LLEventBus.publish(event, ll::event::EventIdView(eventName));
+        } else {
+            LLEventBus.publish(event, ll::event::EventId(eventName));
+        }
         return {};
     });
     RemoteCall::exportAs(
@@ -135,7 +143,7 @@ void LseExport::exportEvent() {
                 static_cast<ll::event::EventPriority>(priority)
             );
 
-            if (LLEventBus.addListener(listener, ll::event::EventIdView(eventName))) {
+            if (LLEventBus.addListener(listener, ll::event::EventId(eventName))) {
                 return *listenerId = listener->getId();
             }
             listener.reset();
@@ -241,7 +249,7 @@ void LseExport::exportEvent() {
             *reinterpret_cast<bool*>(info) = value;
         });
     });
-    RemoteCall::exportAs("setString", [&](uintptr_t info, std::string value) {
+    RemoteCall::exportAs("setString", [&](uintptr_t info, std::string const& value) {
         ll::memory::modify(reinterpret_cast<void*>(info), sizeof(std::string), [&]() {
             *reinterpret_cast<std::string*>(info) = value;
         });
@@ -288,6 +296,193 @@ void LseExport::exportEvent() {
                 );
             default:
                 return ll::makeStringError("Too many arguments");
+            }
+        }
+    );
+    RemoteCall::exportAs(
+        "getImageRange",
+        [&](std::string const& moduleName) -> ll::Expected<std::unordered_map<std::string, uintptr_t>> {
+            if (auto image = ll::sys_utils::getImageRange(moduleName); !image.empty()) {
+                return std::unordered_map<std::string, uintptr_t>{
+                    {"start", reinterpret_cast<uintptr_t>(image.begin()._Myptr)},
+                    {"end",   reinterpret_cast<uintptr_t>(image.end()._Myptr)  },
+                    {"size",  image.size()                                     }
+                };
+            } else {
+                return ll::makeStringError("Module not found");
+            }
+        }
+    );
+
+    RemoteCall::exportAs("mallocMemory", [&](size_t size) {
+        return reinterpret_cast<uintptr_t>(ll::memory::getDefaultAllocator().allocate(size));
+    });
+    RemoteCall::exportAs("freeMemory", [&](uintptr_t address) {
+        ll::memory::getDefaultAllocator().release(reinterpret_cast<void*>(address));
+    });
+    RemoteCall::exportAs("alignedMallocMemory", [&](size_t size, size_t alignment) {
+        return reinterpret_cast<uintptr_t>(ll::memory::getDefaultAllocator().alignedAllocate(size, alignment));
+    });
+    RemoteCall::exportAs("alignedFreeMemory", [&](uintptr_t address) {
+        ll::memory::getDefaultAllocator().alignedRelease(reinterpret_cast<void*>(address));
+    });
+    RemoteCall::exportAs("getUsableMemorySize", [&](uintptr_t address) {
+        return ll::memory::getDefaultAllocator().getUsableSize(reinterpret_cast<void*>(address));
+    });
+    RemoteCall::exportAs("memcpyMemory", [&](uintptr_t dest, uintptr_t src, size_t size) {
+        std::memcpy(reinterpret_cast<void*>(dest), reinterpret_cast<void*>(src), size);
+    });
+    RemoteCall::exportAs("memsetMemory", [&](uintptr_t dest, int8 value, size_t size) {
+        std::memset(reinterpret_cast<void*>(dest), value, size);
+    });
+    RemoteCall::exportAs("memcmpMemory", [&](uintptr_t dest, uintptr_t src, size_t size) {
+        return std::memcmp(reinterpret_cast<void*>(dest), reinterpret_cast<void*>(src), size);
+    });
+    RemoteCall::exportAs("memmoveMemory", [&](uintptr_t dest, uintptr_t src, size_t size) {
+        return reinterpret_cast<uintptr_t>(
+            std::memmove(reinterpret_cast<void*>(dest), reinterpret_cast<void*>(src), size)
+        );
+    });
+
+    enum class NativeTypes : uchar {
+        Void,
+        Bool,
+        Char,
+        UnsignedChar,
+        Short,
+        UnsignedShort,
+        Int,
+        UnsignedInt,
+        Long,
+        UnsignedLong,
+        LongLong,
+        UnsignedLongLong,
+        Float,
+        Double,
+        LongDouble,
+        Pointer
+    };
+    RemoteCall::exportAs(
+        "dynamicCall",
+        [&](std::vector<RemoteCall::ValueType> args) -> ll::Expected<RemoteCall::ValueType> {
+            auto* dynamicCallVM = dcNewCallVM(4096);
+            dcMode(dynamicCallVM, DC_CALL_C_DEFAULT);
+            struct Remover {
+                DCCallVM* dynamicCallVM;
+                Remover(DCCallVM* dynamicCallVM) : dynamicCallVM(dynamicCallVM) {}
+                ~Remover() {
+                    if (dynamicCallVM) dcFree(dynamicCallVM);
+                }
+            } r(dynamicCallVM);
+            if (args.size() < 2) return ll::makeStringError("Too few arguments");
+            auto address = reinterpret_cast<void*>(RemoteCall::extract<uintptr_t>(std::move(args[0])));
+            if (!address) return ll::makeStringError("Invalid address");
+            auto resultType = RemoteCall::extract<NativeTypes>(std::move(args[1]));
+            if (!magic_enum::enum_contains<NativeTypes>(resultType)) return ll::makeStringError("Invalid result type");
+            auto paramsTypes =
+                args.size() > 2 ? RemoteCall::extract<std::vector<NativeTypes>>(std::move(args[2])) : std::vector<NativeTypes>{};
+            auto params = args.size() > 3 ? RemoteCall::extract<std::vector<RemoteCall::ValueType>>(std::move(args[3]))
+                                          : std::vector<RemoteCall::ValueType>{};
+            if (params.size() != paramsTypes.size()) return ll::makeStringError("Wrong number of parameters");
+            dcReset(dynamicCallVM);
+
+            for (size_t i = 0; i < params.size(); ++i) {
+                switch (paramsTypes[i]) {
+                case NativeTypes::Void:
+                    return ll::makeStringError("Parameter types are not allowed to be void");
+                case NativeTypes::Bool:
+                    dcArgBool(dynamicCallVM, RemoteCall::extract<bool>(std::move(params[i])));
+                    break;
+                case NativeTypes::Char:
+                    dcArgChar(dynamicCallVM, RemoteCall::extract<char>(std::move(params[i])));
+                    break;
+                case NativeTypes::UnsignedChar:
+                    dcArgChar(dynamicCallVM, std::bit_cast<char>(RemoteCall::extract<uchar>(std::move(params[i]))));
+                    break;
+                case NativeTypes::Short:
+                    dcArgShort(dynamicCallVM, RemoteCall::extract<short>(std::move(params[i])));
+                    break;
+                case NativeTypes::UnsignedShort:
+                    dcArgShort(dynamicCallVM, std::bit_cast<short>(RemoteCall::extract<ushort>(std::move(params[i]))));
+                    break;
+                case NativeTypes::Int:
+                    dcArgInt(dynamicCallVM, RemoteCall::extract<int>(std::move(params[i])));
+                    break;
+                case NativeTypes::UnsignedInt:
+                    dcArgInt(dynamicCallVM, std::bit_cast<int>(RemoteCall::extract<uint>(std::move(params[i]))));
+                    break;
+                case NativeTypes::Long:
+                    dcArgLong(dynamicCallVM, RemoteCall::extract<long>(std::move(params[i])));
+                    break;
+                case NativeTypes::UnsignedLong:
+                    dcArgLong(dynamicCallVM, std::bit_cast<long>(RemoteCall::extract<ulong>(std::move(params[i]))));
+                    break;
+                case NativeTypes::LongLong:
+                    dcArgLongLong(dynamicCallVM, RemoteCall::extract<llong>(std::move(params[i])));
+                    break;
+                case NativeTypes::UnsignedLongLong:
+                    dcArgLongLong(
+                        dynamicCallVM,
+                        std::bit_cast<llong>(RemoteCall::extract<ullong>(std::move(params[i])))
+                    );
+                    break;
+                case NativeTypes::Float:
+                    dcArgFloat(dynamicCallVM, RemoteCall::extract<float>(std::move(params[i])));
+                    break;
+                case NativeTypes::Double:
+                    dcArgDouble(dynamicCallVM, RemoteCall::extract<double>(std::move(params[i])));
+                    break;
+                case NativeTypes::LongDouble:
+                    dcArgDouble(
+                        dynamicCallVM,
+                        std::bit_cast<double>(RemoteCall::extract<ldouble>(std::move(params[i])))
+                    );
+                    break;
+                case NativeTypes::Pointer: {
+                    auto addr = RemoteCall::extract<uintptr_t>(std::move(params[i]));
+                    dcArgPointer(dynamicCallVM, reinterpret_cast<void*>(addr));
+                    break;
+                }
+                default:
+                    return ll::makeStringError("Unknown parameter type");
+                }
+            }
+            switch (resultType) {
+            case NativeTypes::Void:
+                dcCallVoid(dynamicCallVM, address);
+                return {std::nullptr_t{}};
+            case NativeTypes::Bool:
+                return {dcCallBool(dynamicCallVM, address)};
+            case NativeTypes::Char:
+                return {dcCallChar(dynamicCallVM, address)};
+            case NativeTypes::UnsignedChar:
+                return {std::bit_cast<uchar>(dcCallChar(dynamicCallVM, address))};
+            case NativeTypes::Short:
+                return {dcCallShort(dynamicCallVM, address)};
+            case NativeTypes::UnsignedShort:
+                return {std::bit_cast<ushort>(dcCallShort(dynamicCallVM, address))};
+            case NativeTypes::Int:
+                return {dcCallInt(dynamicCallVM, address)};
+            case NativeTypes::UnsignedInt:
+                return {std::bit_cast<uint>(dcCallInt(dynamicCallVM, address))};
+            case NativeTypes::Long:
+                return {dcCallLong(dynamicCallVM, address)};
+            case NativeTypes::UnsignedLong:
+                return {std::bit_cast<ulong>(dcCallLong(dynamicCallVM, address))};
+            case NativeTypes::LongLong:
+                return {dcCallLongLong(dynamicCallVM, address)};
+            case NativeTypes::UnsignedLongLong:
+                return {std::bit_cast<ullong>(dcCallLongLong(dynamicCallVM, address))};
+            case NativeTypes::Float:
+                return {dcCallFloat(dynamicCallVM, address)};
+            case NativeTypes::Double:
+                return {dcCallDouble(dynamicCallVM, address)};
+            case NativeTypes::LongDouble:
+                return {std::bit_cast<ldouble>(dcCallDouble(dynamicCallVM, address))};
+            case NativeTypes::Pointer:
+                return {reinterpret_cast<uintptr_t>(dcCallPointer(dynamicCallVM, address))};
+            default:
+                return ll::makeStringError("Unknown result type");
             }
         }
     );

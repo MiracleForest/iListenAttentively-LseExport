@@ -2,11 +2,12 @@
 #include "fmt/core.h"
 #include "ll/api/Expected.h"
 #include "ll/api/utils/SystemUtils.h"
+#include "magic_enum.hpp"
+#include "mc/deps/core/math/Vec3.h"
 #include "mc/nbt/CompoundTag.h"
 #include "mc/world/Container.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/item/ItemStack.h"
-#include "mc/deps/core/math/Vec3.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/actor/BlockActor.h"
@@ -116,16 +117,10 @@ struct NumberType {
         i = static_cast<__int64>(v);
         f = static_cast<double>(v);
     }
-    NumberType(double v) : i(static_cast<__int64>(v)), f(static_cast<double>(v)){};
-    NumberType(float v) : i(static_cast<__int64>(v)), f(static_cast<double>(v)){};
-    NumberType(__int64 v) : i(static_cast<__int64>(v)), f(static_cast<double>(v)){};
-    NumberType(int v) : i(static_cast<__int64>(v)), f(static_cast<double>(v)){};
-    NumberType(short v) : i(static_cast<__int64>(v)), f(static_cast<double>(v)){};
-    NumberType(char v) : i(static_cast<__int64>(v)), f(static_cast<double>(v)){};
-    NumberType(unsigned __int64 v) : i(static_cast<__int64>(v)), f(static_cast<double>(v)){};
-    NumberType(unsigned int v) : i(static_cast<__int64>(v)), f(static_cast<double>(v)){};
-    NumberType(unsigned short v) : i(static_cast<__int64>(v)), f(static_cast<double>(v)){};
-    NumberType(unsigned char v) : i(static_cast<__int64>(v)), f(static_cast<double>(v)){};
+    template <typename T>
+        requires(std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>)
+    NumberType(T v) : i(static_cast<__int64>(v)),
+                      f(static_cast<double>(v)){};
     template <typename RTN>
     inline std::enable_if_t<std::is_integral_v<RTN>, RTN> get() {
         return static_cast<RTN>(i);
@@ -322,7 +317,13 @@ RTN extract(ValueType&& val) try {
         RTN rtn{};
         extractValue(std::get<std::unordered_map<std::string, ValueType>>(val.value), rtn);
         return std::move(rtn);
-    } else return extractValue<RTN>(std::move(std::get<Value>(val.value)));
+    } else if constexpr (std::is_enum_v<RTN>) {
+        return static_cast<RTN>(extract<std::underlying_type_t<RTN>>(std::move(val)));
+    } else if constexpr (std::is_same_v<RTN, ValueType>) {
+        return std::move(val);
+    } else {
+        return extractValue<RTN>(std::move(std::get<Value>(val.value)));
+    }
 } catch (std::bad_variant_access&) {
     throw std::runtime_error("Wrong type of argument");
 }
