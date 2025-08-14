@@ -163,109 +163,50 @@ void LseExport::exportEvent() {
         }
     );
 
-    RemoteCall::exportAs("getPlayer", [&](uintptr_t info) { return reinterpret_cast<Player*>(info); });
-    RemoteCall::exportAs("getActor", [&](uintptr_t info) { return reinterpret_cast<Actor*>(info); });
-    RemoteCall::exportAs("getItemStack", [&](uintptr_t info) { return reinterpret_cast<ItemStack*>(info); });
-    RemoteCall::exportAs("getBlock", [&](uintptr_t info) { return reinterpret_cast<Block const*>(info); });
-    RemoteCall::exportAs("getBlockActor", [&](uintptr_t info) { return reinterpret_cast<BlockActor*>(info); });
-    RemoteCall::exportAs("getContainer", [&](uintptr_t info) { return reinterpret_cast<Container*>(info); });
-    RemoteCall::exportAs("getCompoundTag", [&](uintptr_t info) { return reinterpret_cast<CompoundTag*>(info); });
+#define EXPORT_AS(NAME, TYPE)                                                                                          \
+    RemoteCall::exportAs("get" NAME, [&](uintptr_t info) { return reinterpret_cast<TYPE*>(info); });                   \
+    RemoteCall::exportAs("get" NAME "Address", [&](TYPE* info) { return reinterpret_cast<uintptr_t>(info); })
 
-    RemoteCall::exportAs("getPlayerAddress", [&](Player* info) { return reinterpret_cast<uintptr_t>(info); });
-    RemoteCall::exportAs("getActorAddress", [&](Actor* info) { return reinterpret_cast<uintptr_t>(info); });
-    RemoteCall::exportAs("getItemStackAddress", [&](ItemStack* info) { return reinterpret_cast<uintptr_t>(info); });
-    RemoteCall::exportAs("getBlockAddress", [&](Block const* info) { return reinterpret_cast<uintptr_t>(info); });
-    RemoteCall::exportAs("getBlockActorAddress", [&](BlockActor* info) { return reinterpret_cast<uintptr_t>(info); });
-    RemoteCall::exportAs("getContainerAddress", [&](Container* info) { return reinterpret_cast<uintptr_t>(info); });
-    RemoteCall::exportAs("getCompoundTagAddress", [&](CompoundTag* info) { return reinterpret_cast<uintptr_t>(info); });
+    EXPORT_AS("Player", Player);
+    EXPORT_AS("Actor", Actor);
+    EXPORT_AS("ItemStack", ItemStack);
+    EXPORT_AS("Block", Block const);
+    EXPORT_AS("BlockActor", BlockActor);
+    EXPORT_AS("Container", Container);
+    EXPORT_AS("CompoundTag", CompoundTag);
 
-    RemoteCall::exportAs("getRawAddress", [&](uintptr_t info) { return *reinterpret_cast<uintptr_t*>(info); });
-    RemoteCall::exportAs("getLongLong", [&](uintptr_t info) { return *reinterpret_cast<int64*>(info); });
-    RemoteCall::exportAs("getUnsignedLongLong", [&](uintptr_t info) { return *reinterpret_cast<uint64*>(info); });
-    RemoteCall::exportAs("getInt", [&](uintptr_t info) { return *reinterpret_cast<int32*>(info); });
-    RemoteCall::exportAs("getUnsignedInt", [&](uintptr_t info) { return *reinterpret_cast<uint32*>(info); });
-    RemoteCall::exportAs("getShort", [&](uintptr_t info) { return *reinterpret_cast<int16*>(info); });
-    RemoteCall::exportAs("getUnsignedShort", [&](uintptr_t info) { return *reinterpret_cast<uint16*>(info); });
-    RemoteCall::exportAs("getChar", [&](uintptr_t info) { return *reinterpret_cast<int8*>(info); });
-    RemoteCall::exportAs("getUnsignedChar", [&](uintptr_t info) { return *reinterpret_cast<uint8*>(info); });
-    RemoteCall::exportAs("getFloat", [&](uintptr_t info) { return *reinterpret_cast<float*>(info); });
-    RemoteCall::exportAs("getLongDouble", [&](uintptr_t info) {
-        return static_cast<double>(*reinterpret_cast<ldouble*>(&info));
-    });
-    RemoteCall::exportAs("getDouble", [&](uintptr_t info) { return *reinterpret_cast<double*>(&info); });
-    RemoteCall::exportAs("getBool", [&](uintptr_t info) { return *reinterpret_cast<bool*>(&info); });
-    RemoteCall::exportAs("getString", [&](uintptr_t info) { return *reinterpret_cast<std::string*>(&info); });
+#undef EXPORT_AS
 
-    RemoteCall::exportAs("setRawAddress", [&](uintptr_t info, uintptr_t value) {
-        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(uintptr_t), [&]() {
-            *reinterpret_cast<uintptr_t*>(info) = value;
-        });
-    });
-    RemoteCall::exportAs("setLongLong", [&](uintptr_t info, uint64 value) {
-        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(uint64), [&]() {
-            *reinterpret_cast<uint64*>(info) = value;
-        });
-    });
-    RemoteCall::exportAs("setUnsignedLongLong", [&](uintptr_t info, uint64 value) {
-        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(uint64), [&]() {
-            *reinterpret_cast<uint64*>(info) = value;
-        });
-    });
-    RemoteCall::exportAs("setInt", [&](uintptr_t info, int32 value) {
-        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(int32), [&]() {
-            *reinterpret_cast<int32*>(info) = value;
-        });
-    });
-    RemoteCall::exportAs("setUnsignedInt", [&](uintptr_t info, uint32 value) {
-        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(uint32), [&]() {
-            *reinterpret_cast<uint32*>(info) = value;
-        });
-    });
-    RemoteCall::exportAs("setShort", [&](uintptr_t info, int16 value) {
-        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(int16), [&]() {
-            *reinterpret_cast<int16*>(info) = value;
-        });
-    });
-    RemoteCall::exportAs("setUnsignedShort", [&](uintptr_t info, uint16 value) {
-        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(uint16), [&]() {
-            *reinterpret_cast<uint16*>(info) = value;
-        });
-    });
-    RemoteCall::exportAs("setChar", [&](uintptr_t info, int8 value) {
-        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(int8), [&]() {
-            *reinterpret_cast<int8*>(info) = value;
-        });
-    });
-    RemoteCall::exportAs("setUnsignedChar", [&](uintptr_t info, uint8 value) {
-        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(uint8), [&]() {
-            *reinterpret_cast<uint8*>(info) = value;
-        });
-    });
-    RemoteCall::exportAs("setFloat", [&](uintptr_t info, float value) {
-        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(float), [&]() {
-            *reinterpret_cast<float*>(info) = value;
-        });
-    });
-    RemoteCall::exportAs("setLongDouble", [&](uintptr_t info, double value) {
-        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(ldouble), [&]() {
-            *reinterpret_cast<ldouble*>(info) = static_cast<ldouble>(value);
-        });
-    });
-    RemoteCall::exportAs("setDouble", [&](uintptr_t info, double value) {
-        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(double), [&]() {
-            *reinterpret_cast<double*>(info) = value;
-        });
-    });
-    RemoteCall::exportAs("setBool", [&](uintptr_t info, bool value) {
-        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(bool), [&]() {
-            *reinterpret_cast<bool*>(info) = value;
-        });
-    });
-    RemoteCall::exportAs("setString", [&](uintptr_t info, std::string const& value) {
-        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(std::string), [&]() {
-            *reinterpret_cast<std::string*>(info) = value;
-        });
-    });
+#define EXPORT_GETTER_SETTER(NAME, TYPE)                                                                               \
+    RemoteCall::exportAs("get" NAME, [&](uintptr_t info) {                                                             \
+        TYPE result = {};                                                                                              \
+        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(TYPE), [&]() {                                        \
+            result = *reinterpret_cast<TYPE*>(info);                                                                   \
+        });                                                                                                            \
+        return result;                                                                                                 \
+    });                                                                                                                \
+    RemoteCall::exportAs("set" NAME, [&](uintptr_t info, TYPE value) {                                                 \
+        ll::memory::modify(reinterpret_cast<void*>(info), sizeof(TYPE), [&]() {                                        \
+            *reinterpret_cast<TYPE*>(info) = value;                                                                    \
+        });                                                                                                            \
+    })
+
+    EXPORT_GETTER_SETTER("RawAddress", uintptr_t);
+    EXPORT_GETTER_SETTER("LongLong", int64);
+    EXPORT_GETTER_SETTER("UnsignedLongLong", uint64);
+    EXPORT_GETTER_SETTER("Int", int32);
+    EXPORT_GETTER_SETTER("UnsignedInt", uint32);
+    EXPORT_GETTER_SETTER("Short", int16);
+    EXPORT_GETTER_SETTER("UnsignedShort", uint16);
+    EXPORT_GETTER_SETTER("Char", int8);
+    EXPORT_GETTER_SETTER("UnsignedChar", uint8);
+    EXPORT_GETTER_SETTER("Float", float);
+    EXPORT_GETTER_SETTER("Double", double);
+    EXPORT_GETTER_SETTER("LongDouble", ldouble);
+    EXPORT_GETTER_SETTER("Bool", bool);
+    EXPORT_GETTER_SETTER("String", std::string);
+
+#undef EXPORT_GETTER_SETTER
 
     RemoteCall::exportAs(
         "getAddressFromSymbol",
@@ -348,7 +289,7 @@ void LseExport::exportEvent() {
             });
         });
     });
-    RemoteCall::exportAs("memsetMemory", [&](uintptr_t dest, int8 value, size_t size) {
+    RemoteCall::exportAs("memsetMemory", [&](uintptr_t dest, int value, size_t size) {
         ll::memory::modify(reinterpret_cast<void*>(dest), size, [&]() {
             std::memset(reinterpret_cast<void*>(dest), value, size);
         });
