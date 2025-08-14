@@ -388,3 +388,28 @@ declare module "iListenAttentively" {
         memmoveMemory
     };
 }
+
+declare module 'iListenAttentively.js' {
+    import iListenAttentively from 'iListenAttentively';
+    export = iListenAttentively;
+}
+
+declare module 'iListenAttentively-LseExport/lib/iListenAttentively' {
+    import iListenAttentively from 'iListenAttentively';
+    export default iListenAttentively;
+}
+
+declare module 'iListenAttentively-LseExport/lib/iListenAttentively.js' {
+    import iListenAttentively from 'iListenAttentively';
+    export = iListenAttentively;
+}
+
+declare module 'plugins/iListenAttentively-LseExport/lib/iListenAttentively' {
+    import iListenAttentively from 'iListenAttentively';
+    export default iListenAttentively;
+}
+
+declare module 'plugins/iListenAttentively-LseExport/lib/iListenAttentively.js' {
+    import iListenAttentively from 'iListenAttentively';
+    export = iListenAttentively;
+}
