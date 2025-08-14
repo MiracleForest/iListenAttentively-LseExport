@@ -137,36 +137,36 @@ declare module "iListenAttentively" {
 
     const NbtProxy: {
         FunctionMap: {
-            get(target: any): (key: any) => any;
-            set(target: any): (key: any, value: any) => boolean;
-            remove(target: any): (key: any) => boolean;
-            add(target: any): (value: any) => number;
-            toSnbt(target: any): (snbtFormat?: SnbtFormat, indent?: number) => string;
-            hold(target: any): (type: number) => boolean;
-            isArray(target: any): () => boolean;
-            isObject(target: any): () => boolean;
-            isString(target: any): () => boolean;
-            isBoolean(target: any): () => boolean;
-            isNumberFloat(target: any): () => boolean;
-            isNumberInteger(target: any): () => boolean;
-            isNumber(target: any): () => boolean;
-            isPrimitive(target: any): () => boolean;
-            contains(target: any): (key: any, type?: number) => boolean;
-            size(target: any): () => number;
-            [Symbol.iterator](target: any): () => Generator<[string | number, ProxiedNbt | number | string], void, unknown>;
-            toPlayer(target: any): () => Player | undefined;
-            toEntity(target: any): () => Entity | undefined;
-            toBlock(target: any): () => Block | undefined;
-            toBlockActor(target: any): () => BlockEntity | undefined;
-            toItemStack(target: any): () => Item | undefined;
-            toContainer(target: any): () => Container | undefined;
-            toCompoundTag(target: any): () => NbtCompound | undefined;
+            get(target: NbtTypes): (key: string | number) => ProxiedNbt | undefined;
+            set(target: NbtTypes): (key: string | number, value: any) => boolean;
+            remove(target: NbtTypes): (key: number | string) => boolean;
+            add(target: NbtTypes): (value: any) => number;
+            toSnbt(target: NbtTypes): (snbtFormat?: SnbtFormat, indent?: number) => string;
+            hold(target: NbtTypes): (type: NbtType) => boolean;
+            isArray(target: NbtTypes): () => boolean;
+            isObject(target: NbtTypes): () => boolean;
+            isString(target: NbtTypes): () => boolean;
+            isBoolean(target: NbtTypes): () => boolean;
+            isNumberFloat(target: NbtTypes): () => boolean;
+            isNumberInteger(target: NbtTypes): () => boolean;
+            isNumber(target: NbtTypes): () => boolean;
+            isPrimitive(target: NbtTypes): () => boolean;
+            contains(target: NbtTypes): (key: string, type?: NbtType) => boolean;
+            size(target: NbtTypes): () => number;
+            [Symbol.iterator](target: NbtTypes): () => Generator<[string | number, ProxiedNbt | number | string], void, unknown>;
+            toPlayer(target: NbtTypes): () => Player | undefined;
+            toEntity(target: NbtTypes): () => Entity | undefined;
+            toBlock(target: NbtTypes): () => Block | undefined;
+            toBlockActor(target: NbtTypes): () => BlockEntity | undefined;
+            toItemStack(target: NbtTypes): () => Item | undefined;
+            toContainer(target: NbtTypes): () => Container | undefined;
+            toCompoundTag(target: NbtTypes): () => NbtCompound | undefined;
         };
-        get(target: any, key: any): any;
-        set(target: any, key: any, value: any): boolean;
-        deleteProperty(target: any, key: any): boolean;
-        has(target: any, key: any): boolean;
-        ownKeys(target: any): string[] | number[];
+        get(target: NbtTypes, key: string | number): ProxiedNbt | undefined;
+        set(target: NbtTypes, key: string | number, value: any): boolean;
+        deleteProperty(target: NbtTypes, key: string | number): boolean;
+        has(target: NbtTypes, key: string | number): boolean;
+        ownKeys(target: NbtTypes): string[] | number[];
     };
 
     /** 判断一个对象是否为NBT */
@@ -193,7 +193,7 @@ declare module "iListenAttentively" {
      */
     function registerEvent(eventName: string, pluginName?: string): boolean;
     /** @deprecated */
-    function RegisterEvent(eventName: string, pluginName?: string): any;
+    function RegisterEvent(eventName: string, pluginName?: string): boolean;
     /** 监听事件 */
     function emplaceListener(
         eventName: string,
@@ -257,35 +257,35 @@ declare module "iListenAttentively" {
     /** 获取NBT地址 */
     function getCompoundTagAddress(data: NbtCompound): number;
 
-    function getRawAddress(address: number): any;
-    function getLongLong(address: number): any;
-    function getUnsignedLongLong(address: number): any;
-    function getInt(address: number): any;
-    function getUnsignedInt(address: number): any;
-    function getShort(address: number): any;
-    function getUnsignedShort(address: number): any;
-    function getChar(address: number): any;
-    function getUnsignedChar(address: number): any;
-    function getFloat(address: number): any;
-    function getLongDouble(address: number): any;
-    function getDouble(address: number): any;
-    function getBool(address: number): any;
-    function getString(address: number): any;
+    function getRawAddress(address: number): number | undefined;
+    function getLongLong(address: number): number | undefined;
+    function getUnsignedLongLong(address: number): number | undefined;
+    function getInt(address: number): number | undefined;
+    function getUnsignedInt(address: number): number | undefined;
+    function getShort(address: number): number | undefined;
+    function getUnsignedShort(address: number): number | undefined;
+    function getChar(address: number): number | undefined;
+    function getUnsignedChar(address: number): number | undefined;
+    function getFloat(address: number): number | undefined;
+    function getLongDouble(address: number): number | undefined;
+    function getDouble(address: number): number | undefined;
+    function getBool(address: number): boolean | undefined;
+    function getString(address: number): string | undefined;
 
-    function setRawAddress(address: number, data: number): any;
-    function setLongLong(address: number, data: number): any;
-    function setUnsignedLongLong(address: number, data: number): any;
-    function setInt(address: number, data: number): any;
-    function setUnsignedInt(address: number, data: number): any;
-    function setShort(address: number, data: number): any;
-    function setUnsignedShort(address: number, data: number): any;
-    function setChar(address: number, data: number): any;
-    function setUnsignedChar(address: number, data: number): any;
-    function setFloat(address: number, data: number): any;
-    function setLongDouble(address: number, data: number): any;
-    function setDouble(address: number, data: number): any;
-    function setBool(address: number, data: number): any;
-    function setString(address: number, data: number): any;
+    function setRawAddress(address: number, data: number): void;
+    function setLongLong(address: number, data: number): void;
+    function setUnsignedLongLong(address: number, data: number): void;
+    function setInt(address: number, data: number): void;
+    function setUnsignedInt(address: number, data: number): void;
+    function setShort(address: number, data: number): void;
+    function setUnsignedShort(address: number, data: number): void;
+    function setChar(address: number, data: number): void;
+    function setUnsignedChar(address: number, data: number): void;
+    function setFloat(address: number, data: number): void;
+    function setLongDouble(address: number, data: number): void;
+    function setDouble(address: number, data: number): void;
+    function setBool(address: number, data: boolean): void;
+    function setString(address: number, data: string): void;
 
     function getAddressFromSymbol(symbol: string): number;
     function getAddressFromSymbol(dllNmae: string, symbol: string): number;
