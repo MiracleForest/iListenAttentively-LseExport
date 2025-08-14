@@ -1,16 +1,10 @@
-#include "ll/api/event/EventId.h"
-#include "ll/api/event/ListenerBase.h"
-#include "mc/deps/core/utility/optional_ref.h"
-#include <ranges>
 #define LL_MEMORY_OPERATORS
 
 #include "LseExport.h"
 #include "RemoteCallAPI.h"
 #include "event/LseEvent.h"
-#include <climits>
 #include <dyncall/dyncall.h>
 #include <ll/api/event/Emitter.h>
-#include <ll/api/event/EventBus.h>
 #include <ll/api/memory/Memory.h>
 #include <ll/api/memory/MemoryOperators.h>
 #include <ll/api/mod/ModManagerRegistry.h>
@@ -19,7 +13,6 @@
 #include <mc/world/level/Level.h>
 #include <mc/world/level/dimension/Dimension.h>
 #include <mc/world/level/dimension/VanillaDimensions.h>
-#include <unordered_map>
 #include <windows.h>
 
 #define LLEventBus ll::event::EventBus::getInstance()
