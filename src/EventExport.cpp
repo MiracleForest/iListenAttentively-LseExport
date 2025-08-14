@@ -1,3 +1,7 @@
+#include "ll/api/event/EventId.h"
+#include "ll/api/event/ListenerBase.h"
+#include "mc/deps/core/utility/optional_ref.h"
+#include <ranges>
 #define LL_MEMORY_OPERATORS
 
 #include "LseExport.h"
@@ -19,6 +23,13 @@
 #include <windows.h>
 
 #define LLEventBus ll::event::EventBus::getInstance()
+
+namespace ll::event {
+struct ListenerInfo {
+    std::weak_ptr<ListenerBase> weak;
+    SmallDenseSet<EventId>      attachedEvents;
+};
+} // namespace ll::event
 
 namespace ila {
 
@@ -61,10 +72,20 @@ void LseExport::exportEvent() {
         if (dim.expired()) return ll::makeStringError("Dimension not found");
         return dim.lock()->mName;
     });
-    RemoteCall::exportAs("removeListener", [](ll::event::ListenerId eventId) {
-        return LLEventBus.removeListener(eventId);
+    RemoteCall::exportAs("removeListener", [](std::vector<RemoteCall::ValueType> args) {
+        return LLEventBus.removeListener(
+            LLEventBus.getListener(RemoteCall::extract<ll::event::ListenerId>(std::move(args[0]))),
+            args.size() >= 2 ? ll::event::EventIdView{RemoteCall::extract<std::string>(std::move(args[1]))}
+                             : ll::event::EmptyEventId
+        );
     });
-    RemoteCall::exportAs("hasListener", [](ll::event::ListenerId eventId) { return LLEventBus.hasListener(eventId); });
+    RemoteCall::exportAs("hasListener", [](std::vector<RemoteCall::ValueType> args) {
+        return LLEventBus.hasListener(
+            RemoteCall::extract<ll::event::ListenerId>(std::move(args[0])),
+            args.size() >= 2 ? ll::event::EventIdView{RemoteCall::extract<std::string>(std::move(args[1]))}
+                             : ll::event::EmptyEventId
+        );
+    });
     RemoteCall::exportAs(
         "getAllEvent",
         [](std::vector<RemoteCall::ValueType> args) -> ll::Expected<RemoteCall::ValueType> {
@@ -129,7 +150,8 @@ void LseExport::exportEvent() {
     });
     RemoteCall::exportAs(
         "emplaceListener",
-        [&](std::string const& pluginName, std::string const& eventName, int priority) -> ll::Expected<ll::event::ListenerId> {
+        [&](std::string const& pluginName, std::string const& eventName, int priority
+        ) -> ll::Expected<ll::event::ListenerId> {
             auto listenerId = std::make_shared<ll::event::ListenerId>(ULLONG_MAX);
             auto listener   = ll::event::Listener<ll::event::Event>::create(
                 [pluginName, eventName, listenerId, this](ll::event::Event& event) -> void {
@@ -160,6 +182,41 @@ void LseExport::exportEvent() {
             }
             listener.reset();
             return ll::makeStringError("Failed to add listener");
+        }
+    );
+    RemoteCall::exportAs(
+        "getListenerInfo",
+        [&](ll::event::ListenerId listenerId) -> ll::Expected<RemoteCall::ValueType> {
+            static auto& listenerInfos =
+                ll::memory::dAccess<ll::DenseMap<ll::event::ListenerId, ll::event::ListenerInfo>>(
+                    ll::memory::dAccess<std::unique_ptr<void*>>(&LLEventBus, 0).get(),
+                    2000
+                );
+            if (auto listenerInfo = listenerInfos.find(listenerId); listenerInfo != listenerInfos.end()) {
+                auto listener = listenerInfo->second.weak.lock();
+                // clang-format off
+                return std::unordered_map<std::string, RemoteCall::ValueType>{
+                    {"id",       RemoteCall::NumberType{listener->getId()}                        },
+                    {"priority", RemoteCall::NumberType{static_cast<int>(listener->getPriority())}},
+                    {
+                        "attachedEvents",
+                        listenerInfo->second.attachedEvents
+                            | std::views::transform([](ll::event::EventId const& eventId) {
+                                return RemoteCall::ValueType{eventId.name};
+                            })
+                            | std::ranges::to<std::vector>()
+                    },
+                    {
+                        "mod",
+                        optional_ref{listener->modPtr.lock().get()}
+                            .transform([](auto&& manifest) { return manifest.getManifest().name; })
+                            .value_or("Unknown")
+                    }
+                };
+                // clang-format on
+            } else {
+                return ll::makeStringError("Listener not found");
+            }
         }
     );
 

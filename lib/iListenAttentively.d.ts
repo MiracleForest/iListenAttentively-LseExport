@@ -215,9 +215,9 @@ declare module "iListenAttentively" {
     /** 通过维度ID获得维度名字 */
     function getDimensionNameFromId(dimensionId: number): string;
     /** 取消监听事件 */
-    function removeListener(listenerId: number): boolean;
+    function removeListener(listenerId: number, eventName?: string): boolean;
     /** 是否存在监听 */
-    function hasListener(listenerId: number): boolean;
+    function hasListener(listenerId: number, eventName?: string): boolean;
     /** 获取所有事件 */
     function getAllEvent(): { eventName: string, modName: string }[];
     /** 通过插件名获取事件 */
@@ -226,6 +226,8 @@ declare module "iListenAttentively" {
     function hasEvent(eventName: string): boolean;
     /** 获取事件监听数量 */
     function getListenerCount(eventName: string): number;
+    /** 获取事件监听器的信息 */
+    function getListenerInfo(listenerId: number): { id: number, priority: EventPriority, attachedEvents: string[], mod: string };
 
     /** 获取玩家 */
     function getPlayer(data: NbtCompound | number): Player | undefined;
@@ -331,6 +333,7 @@ declare module "iListenAttentively" {
         getAllEvent,
         hasEvent,
         getListenerCount,
+        getListenerInfo,
         getPlayer,
         getActor,
         getItemStack,
