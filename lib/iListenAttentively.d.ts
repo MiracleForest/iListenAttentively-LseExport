@@ -46,7 +46,22 @@ declare module "iListenAttentively" {
         contains(key: string | number, type?: NbtType): boolean;
         /** 获取NBT对象的大小 */
         size(): number;
-        [Symbol.iterator](): IterableIterator<[string | number, ProxiedNbt]>;
+        [Symbol.iterator](): IterableIterator<[string | number, ProxiedNbt | number | string]>;
+
+        /** 转成玩家对象 */
+        toPlayer(): Player | undefined;
+        /** 转成实体对象 */
+        toActor(): Entity | undefined;
+        /** 转成物品对象 */
+        toItemStack(): Item | undefined;
+        /** 转成方块对象 */
+        toBlock(): Block | undefined;
+        /** 转成方块实体对象 */
+        toBlockEntity(): BlockEntity | undefined;
+        /** 转成容器对象 */
+        toContainer(): Container | undefined;
+        /** 转成NBT对象对象 */
+        toCompoundTag(): NbtCompound | undefined;
     } & NbtTypes;
 
     /** 全局导出命名空间 */
@@ -126,7 +141,7 @@ declare module "iListenAttentively" {
             set(target: any): (key: any, value: any) => boolean;
             remove(target: any): (key: any) => boolean;
             add(target: any): (value: any) => number;
-            toSnbt(target: any): (...args: any[]) => string;
+            toSnbt(target: any): (snbtFormat?: SnbtFormat, indent?: number) => string;
             hold(target: any): (type: number) => boolean;
             isArray(target: any): () => boolean;
             isObject(target: any): () => boolean;
@@ -138,7 +153,14 @@ declare module "iListenAttentively" {
             isPrimitive(target: any): () => boolean;
             contains(target: any): (key: any, type?: number) => boolean;
             size(target: any): () => number;
-            [Symbol.iterator](target: any): () => Generator<[any, any], void, unknown>;
+            [Symbol.iterator](target: any): () => Generator<[string | number, ProxiedNbt | number | string], void, unknown>;
+            toPlayer(target: any): () => Player | undefined;
+            toEntity(target: any): () => Entity | undefined;
+            toBlock(target: any): () => Block | undefined;
+            toBlockActor(target: any): () => BlockEntity | undefined;
+            toItemStack(target: any): () => Item | undefined;
+            toContainer(target: any): () => Container | undefined;
+            toCompoundTag(target: any): () => NbtCompound | undefined;
         };
         get(target: any, key: any): any;
         set(target: any, key: any, value: any): boolean;
