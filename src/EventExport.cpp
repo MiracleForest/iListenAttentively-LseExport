@@ -342,18 +342,30 @@ void LseExport::exportEvent() {
         return ll::memory::getDefaultAllocator().getUsableSize(reinterpret_cast<void*>(address));
     });
     RemoteCall::exportAs("memcpyMemory", [&](uintptr_t dest, uintptr_t src, size_t size) {
-        std::memcpy(reinterpret_cast<void*>(dest), reinterpret_cast<void*>(src), size);
+        ll::memory::modify(reinterpret_cast<void*>(dest), size, [&]() {
+            ll::memory::modify(reinterpret_cast<void*>(src), size, [&]() {
+                std::memcpy(reinterpret_cast<void*>(dest), reinterpret_cast<void*>(src), size);
+            });
+        });
     });
     RemoteCall::exportAs("memsetMemory", [&](uintptr_t dest, int8 value, size_t size) {
-        std::memset(reinterpret_cast<void*>(dest), value, size);
+        ll::memory::modify(reinterpret_cast<void*>(dest), size, [&]() {
+            std::memset(reinterpret_cast<void*>(dest), value, size);
+        });
     });
     RemoteCall::exportAs("memcmpMemory", [&](uintptr_t dest, uintptr_t src, size_t size) {
-        return std::memcmp(reinterpret_cast<void*>(dest), reinterpret_cast<void*>(src), size);
+        ll::memory::modify(reinterpret_cast<void*>(dest), size, [&]() {
+            ll::memory::modify(reinterpret_cast<void*>(src), size, [&]() {
+                return std::memcmp(reinterpret_cast<void*>(dest), reinterpret_cast<void*>(src), size);
+            });
+        });
     });
     RemoteCall::exportAs("memmoveMemory", [&](uintptr_t dest, uintptr_t src, size_t size) {
-        return reinterpret_cast<uintptr_t>(
-            std::memmove(reinterpret_cast<void*>(dest), reinterpret_cast<void*>(src), size)
-        );
+        ll::memory::modify(reinterpret_cast<void*>(dest), size, [&]() {
+            ll::memory::modify(reinterpret_cast<void*>(src), size, [&]() {
+                std::memmove(reinterpret_cast<void*>(dest), reinterpret_cast<void*>(src), size);
+            });
+        });
     });
 
     enum class NativeTypes : uchar {
