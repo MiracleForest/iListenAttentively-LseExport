@@ -1,7 +1,7 @@
 on:
   pull_request:
   push:
-    paths: "src/**"
+    paths: ["src/**", "lib/**", "xmake.lua"]
   workflow_dispatch:
   
 jobs:
