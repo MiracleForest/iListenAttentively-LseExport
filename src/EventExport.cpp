@@ -154,6 +154,7 @@ void LseExport::exportEvent() {
                     }
                     try {
                         CompoundTag nbt;
+                        nbt["eventPtr"] = reinterpret_cast<uintptr_t>(&event);
                         event.serialize(nbt);
                         // clang-format off
                         event.deserialize(*RemoteCall::importAs<CompoundTag*(CompoundTag*)>(pluginName, funcName)(&nbt));
