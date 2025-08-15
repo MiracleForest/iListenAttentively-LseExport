@@ -180,7 +180,7 @@ declare module "iListenAttentively" {
     /** 将一个SNBT字符串转换为NBT */
     function fromSnbt(snbt: string): NbtTypes;
     /** 调用插件导出的函数 */
-    function callExportedFunction(functionName: string, ...args: any[]): any;
+    function callExportedFunction(functionName: string, originalReturn?: boolean, ...args: any[]): any;
     /** 获取自身插件名称 */
     function getPluginName(): string;
     /** 
