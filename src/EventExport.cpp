@@ -61,7 +61,8 @@ void LseExport::exportEvent() {
     RemoteCall::exportAs("getDimensionNameFromId", [](int dimensionId) -> ll::Expected<std::string> {
         auto level = ll::service::getLevel();
         if (!level) return ll::makeStringError("Unable to obtain the Level");
-        auto dim = level->getOrCreateDimension(VanillaDimensions::fromSerializedInt(dimensionId));
+        // 使用符号获取防止虚表变化
+        auto dim = level->$getOrCreateDimension(VanillaDimensions::fromSerializedInt(dimensionId));
         if (dim.expired()) return ll::makeStringError("Dimension not found");
         return dim.lock()->mName;
     });
