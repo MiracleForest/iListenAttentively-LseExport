@@ -1,5 +1,5 @@
 declare module "iListenAttentively" {
-    type NbtTypes =
+    export type NbtTypes =
         | NbtByte
         | NbtShort
         | NbtInt
@@ -11,7 +11,7 @@ declare module "iListenAttentively" {
         | NbtList
         | NbtCompound;
 
-    type ProxiedNbt = {
+    export type ProxiedNbt = {
         /** 读取/设置某个下标位置的NBT对象 */
         [key: string | number]: ProxiedNbt
         /** 读取某个下标位置的NBT对象 */
@@ -65,10 +65,10 @@ declare module "iListenAttentively" {
     } & NbtTypes;
 
     /** 全局导出命名空间 */
-    const NamespaceName: string;
+    export const NamespaceName: string;
 
     /** 事件优先级 */
-    enum EventPriority {
+    export enum EventPriority {
         /** 最高 */
         Highest = 0,
         /** 高 */
@@ -82,7 +82,7 @@ declare module "iListenAttentively" {
     };
 
     /** 原生类型 */
-    enum NativeType {
+    export enum NativeType {
         Void = 0,
         Bool = 1,
         Char = 2,
@@ -102,7 +102,7 @@ declare module "iListenAttentively" {
     };
 
     /** SNBT格式 */
-    enum SnbtFormat {
+    export enum SnbtFormat {
         Minimize = 0,
         CompoundLineFeed = 1 << 0,
         ArrayLineFeed = 1 << 1,
@@ -120,7 +120,7 @@ declare module "iListenAttentively" {
     };
 
     /** NBT类型 */
-    enum NbtType {
+    export enum NbtType {
         End = 0,
         Byte = 1,
         Short = 2,
@@ -135,7 +135,40 @@ declare module "iListenAttentively" {
         IntArray = 11,
     };
 
-    const NbtProxy: {
+    /** 序列化实例数据 */
+    export type SerializeTypeData<T extends string = string, N extends boolean = boolean, I extends boolean = boolean> = {
+        /** 数据是否为指针 */
+        _nullable_: N,
+        /** 数据地址 */
+        _pointer_: number,
+        /** 数据类型 */
+        _type_: T,
+        /** 数据是否为常量 */
+        _isconst_: I
+    };
+
+    export type Merge<A, B> = Omit<A, keyof B> & B; // Merge<A, B>
+    export type MergeMultiple<T extends any[]> = // MergeMultiple<[A, B, C, ...]>
+        T extends [infer First, ...infer Rest]
+        ? Merge<First, MergeMultiple<Rest>>
+        : {};
+    export type MergeWithOptionalB<A, B> = Omit<A, keyof B> & Partial<B>;
+
+    /** 事件数据映射 */
+    export interface EventTypeMap {
+        "_ll::event::Event": {
+            /** 事件名 */
+            eventId: string,
+            /** 事件数据地址(由iListenAttentively-LseExport自动生成) */
+            eventPtr: number
+        },
+        "_ll::event::Cancellable": Merge<EventTypeMap["_ll::event::Event"], {
+            /** 是否拦截 */
+            cancelled: boolean
+        }>
+    };
+
+    export const NbtProxy: {
         FunctionMap: {
             get(target: NbtTypes): (key: string | number) => ProxiedNbt | undefined;
             set(target: NbtTypes): (key: string | number, value: any) => boolean;
@@ -170,20 +203,20 @@ declare module "iListenAttentively" {
     };
 
     /** 判断一个对象是否为NBT */
-    function isNbt(data: any): data is NbtTypes;
+    export function isNbt(data: any): data is NbtTypes;
     /** 将一个对象转换为NBT */
-    function toNbt(data: any): NbtTypes;
+    export function toNbt(data: any): NbtTypes;
     /** 将一个NBT转换为对象 */
-    function fromNbt(data: NbtTypes): any;
+    export function fromNbt(data: NbtTypes): any;
     /** 将一个NBT转换为SNBT字符串 */
-    function toSnbt(data: NbtTypes, snbtFormat?: SnbtFormat, indent?: number): string;
+    export function toSnbt(data: NbtTypes, snbtFormat?: SnbtFormat, indent?: number): string;
     /** 将一个SNBT字符串转换为NBT */
-    function fromSnbt(snbt: string): NbtTypes;
+    export function fromSnbt(snbt: string): NbtTypes;
     /** 调用插件导出的函数 */
-    function callExportedFunction(functionName: string, originalReturn: true, ...args: any[]): { success: boolean; error: string; value: any };
-    function callExportedFunction(functionName: string, originalReturn?: false | null | undefined, ...args: any[]): any;
+    export function callExportedFunction(functionName: string, originalReturn: true, ...args: any[]): { success: boolean; error: string; value: any };
+    export function callExportedFunction(functionName: string, originalReturn?: false | null | undefined, ...args: any[]): any;
     /** 获取自身插件名称 */
-    function getPluginName(): string;
+    export function getPluginName(): string;
     /** 
      * 注册事件(需在自身插件加载完后注册,建议使用setTimeout)
      * @description 请务必在事件名前面加一些信息用于区分   
@@ -192,205 +225,133 @@ declare module "iListenAttentively" {
      * 或需要更深层分类可以如`"pluginName::category1::category2::category3::eventName"`
      * 至于为什么需要加前缀，是因为事件名是全局的，如果两个插件注册了相同的事件名，就会导致冲突
      */
-    function registerEvent(eventName: string, pluginName?: string): boolean;
+    export function registerEvent(eventName: string, pluginName?: string): boolean;
     /** @deprecated */
-    function RegisterEvent(eventName: string, pluginName?: string): boolean;
+    export function RegisterEvent(eventName: string, pluginName?: string): boolean;
     /** 监听事件 */
-    function emplaceListener(
+    export function emplaceListener<T extends keyof EventTypeMap>(
+        eventName: T,
+        callback: (event: Merge<ProxiedNbt, EventTypeMap[T]>) => void,
+        priority?: EventPriority,
+        pluginName?: string
+    ): number;
+    export function emplaceListener(
         eventName: string,
-        callback: (event: ProxiedNbt) => void,
+        callback: (event: Merge<[
+            ProxiedNbt,
+            MergeWithOptionalB<
+                EventTypeMap["_ll::event::Event"],
+                EventTypeMap["_ll::event::Cancellable"]
+            >
+        ]>) => void,
         priority?: EventPriority,
         pluginName?: string
     ): number;
     /** 推送事件 */
-    function publish(eventName: string, eventData: Record<string, any> | NbtCompound, modName?: string): void;
+    export function publish(eventName: string, eventData: Record<string, any> | NbtCompound, modName?: string): void;
 
     /** 获取所有事件别名 */
-    function getAllEventAlias(): Record<string, string>;
+    export function getAllEventAlias(): Record<string, string>;
     /** 获取事件别名 */
-    function getEventAlias(eventName: string): string[];
+    export function getEventAlias(eventName: string): string[];
     /** 通过事件别名获取事件名 */
-    function getEventName(eventAlias: string): string;
+    export function getEventName(eventAlias: string): string;
     /** 通过维度名字获得维度ID */
-    function getDimensionIdFromName(dimensionName: string): number;
+    export function getDimensionIdFromName(dimensionName: string): number;
     /** 通过维度ID获得维度名字 */
-    function getDimensionNameFromId(dimensionId: number): string;
+    export function getDimensionNameFromId(dimensionId: number): string;
     /** 取消监听事件 */
-    function removeListener(listenerId: number, eventName?: string): boolean;
+    export function removeListener(listenerId: number, eventName?: string): boolean;
     /** 是否存在监听 */
-    function hasListener(listenerId: number, eventName?: string): boolean;
+    export function hasListener(listenerId: number, eventName?: string): boolean;
     /** 获取所有事件 */
-    function getAllEvent(): { eventName: string, modName: string }[];
+    export function getAllEvent(): { eventName: string, modName: string }[];
     /** 通过插件名获取事件 */
-    function getAllEvent(modName: string): string[];
+    export function getAllEvent(modName: string): string[];
     /** 判断是否存在事件 */
-    function hasEvent(eventName: string): boolean;
+    export function hasEvent(eventName: string): boolean;
     /** 获取事件监听数量 */
-    function getListenerCount(eventName: string): number;
+    export function getListenerCount(eventName: string): number;
     /** 获取事件监听器的信息 */
-    function getListenerInfo(listenerId: number): { id: number, priority: EventPriority, attachedEvents: string[], mod: string };
+    export function getListenerInfo(listenerId: number): { id: number, priority: EventPriority, attachedEvents: string[], mod: string };
 
     /** 获取玩家 */
-    function getPlayer(data: NbtCompound | number): Player | undefined;
+    export function getPlayer(data: NbtCompound | number): Player | undefined;
     /** 获取实体 */
-    function getActor(data: NbtCompound | number): Entity | undefined;
+    export function getActor(data: NbtCompound | number): Entity | undefined;
     /** 获取物品 */
-    function getItemStack(data: NbtCompound | number): Item | undefined;
+    export function getItemStack(data: NbtCompound | number): Item | undefined;
     /** 获取方块 */
-    function getBlock(data: NbtCompound | number): Block | undefined;
+    export function getBlock(data: NbtCompound | number): Block | undefined;
     /** 获取方块实体 */
-    function getBlockActor(data: NbtCompound | number): BlockEntity | undefined;
+    export function getBlockActor(data: NbtCompound | number): BlockEntity | undefined;
     /** 获取容器 */
-    function getContainer(data: NbtCompound | number): Container | undefined;
+    export function getContainer(data: NbtCompound | number): Container | undefined;
     /** 获取NBT */
-    function getCompoundTag(data: NbtCompound | number): NbtCompound | undefined;
+    export function getCompoundTag(data: NbtCompound | number): NbtCompound | undefined;
 
     /** 获取玩家地址 */
-    function getPlayerAddress(data: Player): number;
+    export function getPlayerAddress(data: Player): number;
     /** 获取实体地址 */
-    function getActorAddress(data: Entity): number;
+    export function getActorAddress(data: Entity): number;
     /** 获取物品地址 */
-    function getItemStackAddress(data: Item): number;
+    export function getItemStackAddress(data: Item): number;
     /** 获取方块地址 */
-    function getBlockAddress(data: Block): number;
+    export function getBlockAddress(data: Block): number;
     /** 获取方块实体地址 */
-    function getBlockActorAddress(data: BlockEntity): number;
+    export function getBlockActorAddress(data: BlockEntity): number;
     /** 获取容器地址 */
-    function getContainerAddress(data: Container): number;
+    export function getContainerAddress(data: Container): number;
     /** 获取NBT地址 */
-    function getCompoundTagAddress(data: NbtCompound): number;
+    export function getCompoundTagAddress(data: NbtCompound): number;
 
-    function getRawAddress(address: number): number | undefined;
-    function getLongLong(address: number): number | undefined;
-    function getUnsignedLongLong(address: number): number | undefined;
-    function getInt(address: number): number | undefined;
-    function getUnsignedInt(address: number): number | undefined;
-    function getShort(address: number): number | undefined;
-    function getUnsignedShort(address: number): number | undefined;
-    function getChar(address: number): number | undefined;
-    function getUnsignedChar(address: number): number | undefined;
-    function getFloat(address: number): number | undefined;
-    function getLongDouble(address: number): number | undefined;
-    function getDouble(address: number): number | undefined;
-    function getBool(address: number): boolean | undefined;
-    function getString(address: number): string | undefined;
+    export function getRawAddress(address: number): number | undefined;
+    export function getLongLong(address: number): number | undefined;
+    export function getUnsignedLongLong(address: number): number | undefined;
+    export function getInt(address: number): number | undefined;
+    export function getUnsignedInt(address: number): number | undefined;
+    export function getShort(address: number): number | undefined;
+    export function getUnsignedShort(address: number): number | undefined;
+    export function getChar(address: number): number | undefined;
+    export function getUnsignedChar(address: number): number | undefined;
+    export function getFloat(address: number): number | undefined;
+    export function getLongDouble(address: number): number | undefined;
+    export function getDouble(address: number): number | undefined;
+    export function getBool(address: number): boolean | undefined;
+    export function getString(address: number): string | undefined;
 
-    function setRawAddress(address: number, data: number): void;
-    function setLongLong(address: number, data: number): void;
-    function setUnsignedLongLong(address: number, data: number): void;
-    function setInt(address: number, data: number): void;
-    function setUnsignedInt(address: number, data: number): void;
-    function setShort(address: number, data: number): void;
-    function setUnsignedShort(address: number, data: number): void;
-    function setChar(address: number, data: number): void;
-    function setUnsignedChar(address: number, data: number): void;
-    function setFloat(address: number, data: number): void;
-    function setLongDouble(address: number, data: number): void;
-    function setDouble(address: number, data: number): void;
-    function setBool(address: number, data: boolean): void;
-    function setString(address: number, data: string): void;
+    export function setRawAddress(address: number, data: number): void;
+    export function setLongLong(address: number, data: number): void;
+    export function setUnsignedLongLong(address: number, data: number): void;
+    export function setInt(address: number, data: number): void;
+    export function setUnsignedInt(address: number, data: number): void;
+    export function setShort(address: number, data: number): void;
+    export function setUnsignedShort(address: number, data: number): void;
+    export function setChar(address: number, data: number): void;
+    export function setUnsignedChar(address: number, data: number): void;
+    export function setFloat(address: number, data: number): void;
+    export function setLongDouble(address: number, data: number): void;
+    export function setDouble(address: number, data: number): void;
+    export function setBool(address: number, data: boolean): void;
+    export function setString(address: number, data: string): void;
 
-    function getAddressFromSymbol(symbol: string): number;
-    function getAddressFromSymbol(dllNmae: string, symbol: string): number;
-    function getAddressFromSignature(signature: string): number;
-    function getAddressFromSignature(dllName: string, signature: string): number;
-    function getImageRange(dllName: string): { start: number, end: number, size: number };
-    function dynamicCall(address: number, returnType: NativeType, paramsType: NativeType[], params: number[]): any;
-    function mallocMemory(size: number): number;
-    function freeMemory(address: number): void;
-    function alignedMallocMemory(size: number, alignment: number): number;
-    function alignedFreeMemory(address: number): void;
-    function getUsableMemorySize(address: number): number;
-    function memcpyMemory(dest: number, src: number, size: number): void;
-    function memsetMemory(dest: number, value: number, size: number): void;
-    function memcmpMemory(dest: number, src: number, size: number): number;
-    function memmoveMemory(dest: number, src: number, size: number): number;
+    export function getAddressFromSymbol(symbol: string): number;
+    export function getAddressFromSymbol(dllNmae: string, symbol: string): number;
+    export function getAddressFromSignature(signature: string): number;
+    export function getAddressFromSignature(dllName: string, signature: string): number;
+    export function getImageRange(dllName: string): { start: number, end: number, size: number };
+    export function dynamicCall(address: number, returnType: NativeType, paramsType: NativeType[], params: number[]): any;
+    export function mallocMemory(size: number): number;
+    export function freeMemory(address: number): void;
+    export function alignedMallocMemory(size: number, alignment: number): number;
+    export function alignedFreeMemory(address: number): void;
+    export function getUsableMemorySize(address: number): number;
+    export function memcpyMemory(dest: number, src: number, size: number): void;
+    export function memsetMemory(dest: number, value: number, size: number): void;
+    export function memcmpMemory(dest: number, src: number, size: number): number;
+    export function memmoveMemory(dest: number, src: number, size: number): number;
 
-    export = {
-        NamespaceName,
-        EventPriority,
-        NativeType,
-        SnbtFormat,
-        NbtProxy,
-        NbtType,
-        isNbt,
-        toNbt,
-        fromNbt,
-        toSnbt,
-        fromSnbt,
-        callExportedFunction,
-        getPluginName,
-        registerEvent,
-        RegisterEvent,
-        emplaceListener,
-        publish,
-        getAllEventAlias,
-        getEventAlias,
-        getEventName,
-        getDimensionIdFromName,
-        getDimensionNameFromId,
-        removeListener,
-        hasListener,
-        getAllEvent,
-        hasEvent,
-        getListenerCount,
-        getListenerInfo,
-        getPlayer,
-        getActor,
-        getItemStack,
-        getBlock,
-        getBlockActor,
-        getContainer,
-        getCompoundTag,
-        getPlayerAddress,
-        getActorAddress,
-        getItemStackAddress,
-        getBlockAddress,
-        getBlockActorAddress,
-        getContainerAddress,
-        getCompoundTagAddress,
-        getRawAddress,
-        getLongLong,
-        getUnsignedLongLong,
-        getInt,
-        getUnsignedInt,
-        getShort,
-        getUnsignedShort,
-        getChar,
-        getUnsignedChar,
-        getFloat,
-        getLongDouble,
-        getDouble,
-        getBool,
-        getString,
-        setRawAddress,
-        setLongLong,
-        setUnsignedLongLong,
-        setInt,
-        setUnsignedInt,
-        setShort,
-        setUnsignedShort,
-        setChar,
-        setUnsignedChar,
-        setFloat,
-        setLongDouble,
-        setDouble,
-        setBool,
-        setString,
-        getAddressFromSymbol,
-        getAddressFromSignature,
-        getImageRange,
-        dynamicCall,
-        mallocMemory,
-        freeMemory,
-        alignedMallocMemory,
-        alignedFreeMemory,
-        getUsableMemorySize,
-        memcpyMemory,
-        memsetMemory,
-        memcmpMemory,
-        memmoveMemory
-    };
+    export default undefined;
 }
 
 declare module 'iListenAttentively.js' {
