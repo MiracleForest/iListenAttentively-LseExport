@@ -18,7 +18,7 @@ iListenAttentively.emplaceListener(
     event => {
         event.self.toPlayer().tell("Hello, world!");
     }
-)
+);
 ```
 
 ## Contributors

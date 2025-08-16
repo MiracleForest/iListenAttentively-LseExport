@@ -156,7 +156,7 @@ declare module "iListenAttentively" {
         T extends [infer First, ...infer Rest]
         ? Merge<First, MergeMultiple<Rest>>
         : {};
-    export type MergeWithOptionalB<A, B> = Omit<A, keyof B> & Partial<B>;
+    export type MergeWithOptionalB<A, B> = Omit<A, keyof B> & Partial<B>; // MergeWithOptionalB<A, B>
 
     /** 事件数据映射 */
     export interface EventTypeMap {
