@@ -136,7 +136,11 @@ declare module "iListenAttentively" {
     };
 
     /** 序列化实例数据 */
-    export type SerializeTypeData<T extends string = string, N extends boolean = boolean, I extends boolean = boolean> = {
+    export type SerializeTypeData<
+        T extends string = string,
+        N extends boolean = boolean,
+        I extends boolean = boolean
+    > = ProxiedNbt & {
         /** 数据是否为指针 */
         _nullable_: N,
         /** 数据地址 */

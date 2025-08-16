@@ -1,7 +1,7 @@
 {
     "format_version": 2,
     "tooth": "github.com/MiracleForest/iListenAttentively-LseExport",
-    "version": "0.1.6",
+    "version": "0.2.0",
     "info": {
         "name": "iListenAttentively-LseExport",
         "description": "Export events to LegacyScriptEngine",
@@ -9,12 +9,15 @@
         "source": "github.com/MiracleForest/iListenAttentively-LseExport",
         "tags": [
             "levilamina",
-            "event"
+            "event",
+            "lse",
+            "export",
+            "nativeapi"
         ]
     },
     "asset_url": "https://github.com/MiracleForest/iListenAttentively-LseExport/releases/download/v$(version)/iListenAttentively-LseExport-windows-x64.zip",
     "prerequisites": {
-        "github.com/LiteLDev/LeviLamina": ">=1.1.1",
+        "github.com/LiteLDev/LeviLamina": ">=1.1.0",
         "github.com/LiteLDev/LegacyRemoteCall": ">=0.10.0"
     },
     "files": {

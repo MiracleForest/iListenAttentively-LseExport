@@ -7,14 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-08-16
+
 ### Added
 
-
-### Fixed
-
+- Added more api @zimuya4153
 
 ### Changed
 
+- Restructured the entire mod @zimuya4153
 
 ## [0.1.6] - 2024-04-10
 
@@ -22,16 +23,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added type check for get function @zimuya4153
 
+### Changed
+
+- Enhanced publish method @zimuya4153
+
 ### Fixed
 
 - Fixed getPluginName function @zimuya4153
 - Fixed d.ts type @zimuya4153
 - Fixed eventId for custom event @zimuya4153
-
-### Changed
-
-- Enhanced publish method @zimuya4153
-
 
 ## [0.1.5] - 2024-04-03
 
@@ -40,17 +40,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added forEach, filter, map, find, some, every, reduce for NbtList @zimuya4153
 - Added getEventName and getEventAlias function @zimuya4153
 
-### Fixed
-
-- Fixed iterator index for NbtList @zimuya4153
-- Fixed d.ts type @zimuya4153
-- Fixed getBoolean, getString, getRawAddress function @zimuya4153
-
 ### Changed
 
 - Changed the event alias to dynamically generated @zimuya4153
 - Optimized code @zimuya4153
 
+### Fixed
+
+- Fixed iterator index for NbtList @zimuya4153
+- Fixed d.ts type @zimuya4153
+- Fixed getBoolean, getString, getRawAddress function @zimuya4153
 
 ## [0.1.4] - 2024-03-08
 
@@ -62,7 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added getDimensionIdFromName and getDimensionNameFromId function @zimuya4153
 - Added more types of getNumber @zimuya4153
 
-### Clanged
+### Changed
 
 - Use macro to simplify function definition @zimuya4153
 
@@ -72,14 +71,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added some get function @zimuya4153
 
-### Change
+### Changed
 
 - Optimized some get functions @zimuya4153
 
 ### Fixed
 
 - Fixed the NbtList toSNBT format error @zimuya4153
-
 
 ## [0.1.2] - 2024-02-24
 
@@ -89,13 +87,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added some get function @zimuya4153
 - Added toSNBT method to NBT @zimuya4153
 
-
-## [0.1.1] - 2024-2-19
+## [0.1.1] - 2024-02-18
 
 ### Added
 
 - Added default values to emplaceListener parameters @zimuya4153
 - Added passive to manifest @zimuya4153
+
+### Changed
+
+- Deleted the type detection of the getPlayer and getEntity interfaces @zimuya4153
+- Enhanced listening callback completion @zimuya4153
 
 ### Fixed
 
@@ -104,19 +106,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed getPlayer and getEntity to handle info.get() @zimuya4153
 - Fixed serialize/deserialize for custom event @zimuya4153
 
-### Change
-
-- Deleted the type detection of the getPlayer and getEntity interfaces @zimuya4153
-- Enhanced listening callback completion @zimuya4153
-
-
-## [0.1.0] - 2024-2-18
+## [0.1.0] - 2024-02-17
 
 ### Added
 
 - Initialize the module @zimuya4153
 
-[Unreleased]: https://github.com/MiracleForest/iListenAttentively/compare/v0.1.6...HEAD
+[Unreleased]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.1.6...v0.2.0
 [0.1.6]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.1.3...v0.1.4

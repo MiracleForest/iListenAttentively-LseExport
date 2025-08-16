@@ -9,6 +9,17 @@
 
 ## Usage
 
+```javascript
+/** @type {import("iListenAttentively")} */
+const iListenAttentively = require("./iListenAttentively-LseExport/lib/iListenAttentively.js");
+
+iListenAttentively.emplaceListener(
+    "ll::event::PlayerJoinEvent",
+    event => {
+        event.self.toPlayer().tell("Hello, world!");
+    }
+)
+```
 
 ## Contributors
 
