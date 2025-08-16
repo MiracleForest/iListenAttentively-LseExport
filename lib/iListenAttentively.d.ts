@@ -166,10 +166,10 @@ declare module "iListenAttentively" {
             /** 事件数据地址(由iListenAttentively-LseExport自动生成) */
             eventPtr: number
         },
-        "_ll::event::Cancellable": Merge<EventTypeMap["_ll::event::Event"], {
+        "_ll::event::Cancellable": {
             /** 是否拦截 */
             cancelled: boolean
-        }>
+        }
     };
 
     export const NbtProxy: {
@@ -241,13 +241,13 @@ declare module "iListenAttentively" {
     ): number;
     export function emplaceListener(
         eventName: string,
-        callback: (event: Merge<[
+        callback: (event: Merge<
             ProxiedNbt,
             MergeWithOptionalB<
                 EventTypeMap["_ll::event::Event"],
                 EventTypeMap["_ll::event::Cancellable"]
             >
-        ]>) => void,
+        >) => void,
         priority?: EventPriority,
         pluginName?: string
     ): number;

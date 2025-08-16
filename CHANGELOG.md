@@ -9,9 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.1] - 2025-08-16
 
-### Added 
+### Added
 
 - Added require check @zimuya4153
+
+### Fixed
+
+- Fixed d.ts type completion @zimuya4153
 
 ## [0.2.0] - 2025-08-16
 
@@ -23,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Restructured the entire mod @zimuya4153
 
-## [0.1.6] - 2024-04-10
+## [0.1.6] - 2025-04-10
 
 ### Added
 
@@ -39,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed d.ts type @zimuya4153
 - Fixed eventId for custom event @zimuya4153
 
-## [0.1.5] - 2024-04-03
+## [0.1.5] - 2025-04-03
 
 ### Added
 
@@ -57,7 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed d.ts type @zimuya4153
 - Fixed getBoolean, getString, getRawAddress function @zimuya4153
 
-## [0.1.4] - 2024-03-08
+## [0.1.4] - 2025-03-08
 
 ### Added
 
@@ -71,7 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Use macro to simplify function definition @zimuya4153
 
-## [0.1.3] - 2024-02-27
+## [0.1.3] - 2025-02-27
 
 ### Added
 
@@ -85,7 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed the NbtList toSNBT format error @zimuya4153
 
-## [0.1.2] - 2024-02-24
+## [0.1.2] - 2025-02-24
 
 ### Added
 
@@ -93,7 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added some get function @zimuya4153
 - Added toSNBT method to NBT @zimuya4153
 
-## [0.1.1] - 2024-02-18
+## [0.1.1] - 2025-02-18
 
 ### Added
 
@@ -112,13 +116,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed getPlayer and getEntity to handle info.get() @zimuya4153
 - Fixed serialize/deserialize for custom event @zimuya4153
 
-## [0.1.0] - 2024-02-17
+## [0.1.0] - 2025-02-17
 
 ### Added
 
 - Initialize the module @zimuya4153
 
-[Unreleased]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.1.6...v0.2.0
 [0.1.6]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.1.4...v0.1.5
