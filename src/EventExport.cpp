@@ -292,10 +292,10 @@ void LseExport::exportEvent() {
                 );
             case 2:
                 return reinterpret_cast<uintptr_t>(
-                    ll::memory::Signature::parse(RemoteCall::extract<std::string>(std::move(args[0])))
+                    ll::memory::Signature::parse(RemoteCall::extract<std::string>(std::move(args[1])))
                         .view()
                         .resolve(
-                            ll::sys_utils::getImageRange(RemoteCall::extract<std::string>(std::move(args[1]))),
+                            ll::sys_utils::getImageRange(RemoteCall::extract<std::string>(std::move(args[0]))),
                             true
                         )
                 );
