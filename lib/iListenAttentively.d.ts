@@ -67,6 +67,9 @@ declare module "iListenAttentively" {
     /** 全局导出命名空间 */
     export const NamespaceName: string;
 
+    /** 调用插件名称缓存 */
+    export const PluginNameCache: string | undefined;
+
     /** 事件优先级 */
     export enum EventPriority {
         /** 最高 */
