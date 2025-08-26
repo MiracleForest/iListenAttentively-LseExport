@@ -9,7 +9,7 @@ declare module "iListenAttentively" {
         "ll::event::ExecutingCommandEvent": MergeMultiple<[EventTypeMap["_ll::event::Cancellable"], EventTypeMap["_ll::event::ExecuteCommandEvent"], {
 
         }]>,
-        "ll::event::ExecutedCommandEvent": MergeMultiple<[EventTypeMap["ll::event::ExecuteCommandEvent"], {
+        "ll::event::ExecutedCommandEvent": MergeMultiple<[EventTypeMap["_ll::event::ExecuteCommandEvent"], {
             result: {
                 success: boolean,
                 code: number
