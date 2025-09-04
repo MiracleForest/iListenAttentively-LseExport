@@ -46,7 +46,19 @@ declare module "iListenAttentively" {
         contains(key: string | number, type?: NbtType): boolean;
         /** 获取NBT对象的大小 */
         size(): number;
-        [Symbol.iterator](): IterableIterator<[string | number, ProxiedNbt | number | string]>;
+
+        [Symbol.iterator](): IterableIterator<{
+            key: string | number,
+            k: string | number,
+            index: string | number,
+            i: string | number,
+            first: string | number,
+            value: ProxiedNbt | number | string,
+            v: ProxiedNbt | number | string,
+            second: ProxiedNbt | number | string,
+            [Symbol.iterator]: () => IterableIterator<ProxiedNbt | number | string>,
+            toString(): string
+        }>;
 
         /** 转成玩家对象 */
         toPlayer(): Player | undefined;
@@ -193,7 +205,18 @@ declare module "iListenAttentively" {
             isPrimitive(target: NbtTypes): () => boolean;
             contains(target: NbtTypes): (key: string, type?: NbtType) => boolean;
             size(target: NbtTypes): () => number;
-            [Symbol.iterator](target: NbtTypes): () => Generator<[string | number, ProxiedNbt | number | string], void, unknown>;
+            [Symbol.iterator](target: NbtTypes): IterableIterator<{
+                key: string | number,
+                k: string | number,
+                index: string | number,
+                i: string | number,
+                first: string | number,
+                value: ProxiedNbt | number | string,
+                v: ProxiedNbt | number | string,
+                second: ProxiedNbt | number | string,
+                [Symbol.iterator]: () => IterableIterator<ProxiedNbt | number | string>,
+                toString(): string
+            }>;
             toPlayer(target: NbtTypes): () => Player | undefined;
             toEntity(target: NbtTypes): () => Entity | undefined;
             toBlock(target: NbtTypes): () => Block | undefined;
