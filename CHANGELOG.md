@@ -12,11 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added require check @zimuya4153
+- Added plugin name cache optimization @zimuya4153
 
 ### Fixed
 
 - Fixed d.ts type completion @zimuya4153
 - correct argument order in signature resolution @zimuya4153
+- Fixed the iteration of ProxiedNbt @zimuya4153
 
 ## [0.2.0] - 2025-08-16
 
