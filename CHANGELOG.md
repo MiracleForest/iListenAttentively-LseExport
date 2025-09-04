@@ -7,18 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2025-09-05
+
+### Added
+
+- Added plugin dependency check and auto-update manifest @zimuya4153
+- Added plugin name cache optimization @zimuya4153
+
+### Fixed
+
+- Correct type reference in ExecutedCommandEvent @zimuya4153
+- Fixed the iteration of ProxiedNbt @zimuya4153
+
 ## [0.2.1] - 2025-08-16
 
 ### Added
 
 - Added require check @zimuya4153
-- Added plugin name cache optimization @zimuya4153
 
 ### Fixed
 
 - Fixed d.ts type completion @zimuya4153
 - correct argument order in signature resolution @zimuya4153
-- Fixed the iteration of ProxiedNbt @zimuya4153
 
 ## [0.2.0] - 2025-08-16
 
@@ -125,7 +135,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initialize the module @zimuya4153
 
-[Unreleased]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.1.6...v0.2.0
 [0.1.6]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.1.5...v0.1.6
