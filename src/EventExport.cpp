@@ -61,8 +61,11 @@ void LseExport::exportEvent() {
     RemoteCall::exportAs("getDimensionNameFromId", [](int dimensionId) -> ll::Expected<std::string> {
         auto level = ll::service::getLevel();
         if (!level) return ll::makeStringError("Unable to obtain the Level");
+        auto dimid = VanillaDimensions::fromSerializedInt(Bedrock::Result<int>{dimensionId});
+        if (!dimid) return ll::makeStringError("Dimension id not found");
+        if (*dimid == VanillaDimensions::Undefined()) return ll::makeStringError("Dimension id not found");
         // 使用符号获取防止虚表变化
-        auto dim = level->$getOrCreateDimension(VanillaDimensions::fromSerializedInt(dimensionId));
+        auto dim = level->$getOrCreateDimension(*dimid);
         if (dim.expired()) return ll::makeStringError("Dimension not found");
         return dim.lock()->mName;
     });
