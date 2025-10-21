@@ -4,6 +4,7 @@
 #include "RemoteCallAPI.h"
 #include "event/LseEvent.h"
 #include <dyncall/dyncall.h>
+#include <ll/api/Versions.h>
 #include <ll/api/event/Emitter.h>
 #include <ll/api/memory/Memory.h>
 #include <ll/api/memory/MemoryOperators.h>
@@ -335,7 +336,12 @@ void LseExport::exportEvent() {
         ll::memory::getDefaultAllocator().alignedRelease(reinterpret_cast<void*>(address));
     });
     RemoteCall::exportAs("getUsableMemorySize", [&](uintptr_t address) {
-        return ll::memory::getDefaultAllocator().getUsableSize(reinterpret_cast<void*>(address));
+        auto& allocator = ll::memory::getDefaultAllocator();
+        if (ll::getGameVersion() >= ll::data::Version{1, 21, 70}) {
+            return ll::memory::virtualCall<uint64, void*, bool>(&allocator, 5, reinterpret_cast<void*>(address), false);
+        } else {
+            return ll::memory::virtualCall<uint64, void*>(&allocator, 5, reinterpret_cast<void*>(address));
+        }
     });
     RemoteCall::exportAs("memcpyMemory", [&](uintptr_t dest, uintptr_t src, size_t size) {
         ll::memory::modify(reinterpret_cast<void*>(dest), size, [&]() {
