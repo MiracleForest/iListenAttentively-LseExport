@@ -18,9 +18,14 @@ public:
 
     bool disable();
 
-    void registerDefaultEventsAlias();
+    void exportEventV1();
+    void registerDefaultEventsAliasV1();
 
-    void exportEvent();
+    void exportEventV2();
+    void registerDefaultEventsAliasV2();
+
+    void exportEventV3();
+    void registerDefaultEventsAliasV3();
 
 private:
     ll::mod::NativeMod&                          mSelf;

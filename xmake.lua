@@ -28,7 +28,8 @@ target("iListenAttentively-LseExport")
     add_defines(
         "NOMINMAX",
         "UNICODE",
-        "_HAS_CXX23=1"
+        "_HAS_CXX23=1",
+        "_SILENCE_CXX20_IS_ALWAYS_EQUAL_DEPRECATION_WARNING=1"
     )
     add_packages(
         "levilamina",

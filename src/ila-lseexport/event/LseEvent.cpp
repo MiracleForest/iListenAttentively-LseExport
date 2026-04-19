@@ -1,5 +1,5 @@
 #pragma once
-#include "LseEvent.h"
+#include "ila-lseexport/event/LseEvent.h"
 #include <ll/api/event/Emitter.h>
 #include <mc/nbt/CompoundTag.h>
 
