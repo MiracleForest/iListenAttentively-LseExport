@@ -330,7 +330,6 @@ struct ValueType {
     Type value;
     ValueType()                 = default;
     ValueType(ValueType const&) = default;
-    ValueType(ValueType&&)      = default;
     ValueType(Value&& v) : value(std::move(v)) {};
     // only participate in overload resolution when:
     //  - T is not ValueType (avoid recursive/ambiguous conversion)

@@ -1,5 +1,6 @@
 #define LL_MEMORY_OPERATORS
 #include "ila-lseexport/LseExport.h"
+#include <Windows.h>
 #include <ll/api/Versions.h>
 #include <ll/api/event/EventBus.h>
 #include <ll/api/io/FileUtils.h>
@@ -7,6 +8,8 @@
 #include <ll/api/mod/ModManagerRegistry.h>
 #include <ll/api/mod/RegisterHelper.h>
 #include <ll/api/reflection/Deserialization.h>
+#include <ll/api/service/GamingStatus.h>
+#include <ll/api/thread/GlobalThreadPauser.h>
 #include <nlohmann/json.hpp>
 
 namespace ila {
@@ -56,6 +59,17 @@ bool LseExport::load() {
 bool LseExport::enable() { return true; }
 
 bool LseExport::disable() { return true; }
+
+void LseExport::modify(void* ptr, size_t length, brstd::function_ref<void()> callback, bool pauseThread) {
+    std::optional<ll::thread::GlobalThreadPauser> pauser;
+    if (pauseThread && ll::getGamingStatus() != ll::GamingStatus::Default) {
+        pauser.emplace();
+    }
+    DWORD oldProtect;
+    VirtualProtect(ptr, length, PAGE_EXECUTE_READWRITE, &oldProtect);
+    callback();
+    VirtualProtect(ptr, length, oldProtect, &oldProtect);
+}
 
 } // namespace ila
 
