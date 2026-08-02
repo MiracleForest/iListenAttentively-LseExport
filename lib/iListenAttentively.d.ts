@@ -158,13 +158,25 @@ declare module "iListenAttentively" {
         IntArray = 11,
     };
 
-    export type NativeValue<T extends NativeType> =
+    export type NativeInteger64Type =
+        | NativeType.LongLong
+        | NativeType.UnsignedLongLong;
+
+    export type NativeValue<T extends NativeType, TAsString extends boolean = false> =
         T extends NativeType.Void ? void :
         T extends NativeType.Bool ? boolean :
+        T extends NativeInteger64Type ? TAsString extends true ? string : number :
         number;
 
     export type NativeParameterValue<T extends NativeType> =
-        T extends NativeType.Void ? never : NativeValue<T>;
+        T extends NativeType.Void ? never :
+        T extends NativeInteger64Type ? bigint | number :
+        NativeValue<T>;
+
+    export type NativeReturnValue<T extends NativeType> =
+        T extends NativeType.Void ? void :
+        T extends NativeInteger64Type ? bigint | number :
+        NativeValue<T>;
 
     export type NativeArguments<T extends readonly NativeType[]> = {
         -readonly [K in keyof T]: T[K] extends NativeType
@@ -172,13 +184,23 @@ declare module "iListenAttentively" {
             : never;
     };
 
+    export type NativeResultArguments<
+        T extends readonly NativeType[],
+        TAsString extends boolean = false
+    > = {
+        -readonly [K in keyof T]: T[K] extends NativeType
+            ? NativeValue<T[K], TAsString>
+            : never;
+    };
+
     export type HookCallback<
         TResult extends NativeType,
-        TParams extends readonly NativeType[]
+        TParams extends readonly NativeType[],
+        TAsString extends boolean = false
     > = (
-        origin: (...params: NativeArguments<TParams>) => NativeValue<TResult>,
-        ...params: NativeArguments<TParams>
-    ) => NativeValue<TResult>;
+        origin: (...params: NativeArguments<TParams>) => NativeValue<TResult, TAsString>,
+        ...params: NativeResultArguments<TParams, TAsString>
+    ) => NativeReturnValue<TResult>;
 
     /** 序列化实例数据 */
     export type SerializeTypeData<
@@ -309,24 +331,30 @@ declare module "iListenAttentively" {
     ): number;
     export function hook<
         const TResult extends NativeType,
-        const TParams extends readonly NativeType[]
+        const TParams extends readonly NativeType[],
+        const TAsString extends boolean = false
     >(
         address: number,
-        callback: HookCallback<TResult, TParams>,
+        callback: HookCallback<TResult, TParams, TAsString>,
         resultType: TResult,
         paramsTypes: TParams,
         priority?: HookPriority,
         suspendThreads?: boolean,
-        pluginName?: string
+        pluginName?: string,
+        asString?: TAsString
     ): number;
-    export function hook<const TResult extends NativeType>(
+    export function hook<
+        const TResult extends NativeType,
+        const TAsString extends boolean = false
+    >(
         address: number,
-        callback: HookCallback<TResult, NativeType.Pointer[]>,
+        callback: HookCallback<TResult, NativeType.Pointer[], TAsString>,
         resultType: TResult,
         paramsTypes?: undefined,
         priority?: HookPriority,
         suspendThreads?: boolean,
-        pluginName?: string
+        pluginName?: string,
+        asString?: TAsString
     ): number;
     export function unhook(hookId: number, suspendThreads?: boolean): boolean;
     /** 推送事件 */
@@ -388,8 +416,14 @@ declare module "iListenAttentively" {
     export function getCompoundTagAddress(data: NbtCompound): number;
 
     export function getRawAddress(address: number): number | undefined;
-    export function getLongLong(address: number): number | undefined;
-    export function getUnsignedLongLong(address: number): number | undefined;
+    export function getLongLong(address: number, pauseThread: boolean | undefined, asString: true): string | undefined;
+    export function getLongLong(address: number, pauseThread?: boolean, asString?: false): number | undefined;
+    export function getUnsignedLongLong(
+        address: number,
+        pauseThread: boolean | undefined,
+        asString: true
+    ): string | undefined;
+    export function getUnsignedLongLong(address: number, pauseThread?: boolean, asString?: false): number | undefined;
     export function getInt(address: number): number | undefined;
     export function getUnsignedInt(address: number): number | undefined;
     export function getShort(address: number): number | undefined;
@@ -403,8 +437,8 @@ declare module "iListenAttentively" {
     export function getString(address: number): string | undefined;
 
     export function setRawAddress(address: number, data: number): void;
-    export function setLongLong(address: number, data: number): void;
-    export function setUnsignedLongLong(address: number, data: number): void;
+    export function setLongLong(address: number, data: bigint | number, pauseThread?: boolean): void;
+    export function setUnsignedLongLong(address: number, data: bigint | number, pauseThread?: boolean): void;
     export function setInt(address: number, data: number): void;
     export function setUnsignedInt(address: number, data: number): void;
     export function setShort(address: number, data: number): void;
@@ -424,13 +458,15 @@ declare module "iListenAttentively" {
     export function getImageRange(dllName: string): { start: number, end: number, size: number };
     export function dynamicCall<
         const TResult extends NativeType,
-        const TParams extends readonly NativeType[]
+        const TParams extends readonly NativeType[],
+        const TAsString extends boolean = false
     >(
         address: number,
         returnType: TResult,
         paramsType: TParams,
-        params: NativeArguments<TParams>
-    ): NativeValue<TResult>;
+        params: NativeArguments<TParams>,
+        asString?: TAsString
+    ): NativeValue<TResult, TAsString>;
     export function mallocMemory(size: number): number;
     export function freeMemory(address: number): void;
     export function alignedMallocMemory(size: number, alignment: number): number;
