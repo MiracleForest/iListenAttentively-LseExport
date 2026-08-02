@@ -96,24 +96,32 @@ declare module "iListenAttentively" {
         Lowest = 400,
     };
 
+    export enum HookPriority {
+        Highest = 0,
+        High = 100,
+        Normal = 200,
+        Low = 300,
+        Lowest = 400,
+    };
+
     /** 原生类型 */
     export enum NativeType {
-        Void = 0,
-        Bool = 1,
-        Char = 2,
-        UnsignedChar = 3,
-        Short = 4,
-        UnsignedShort = 5,
-        Int = 6,
-        UnsignedInt = 7,
-        Long = 8,
-        UnsignedLong = 9,
-        LongLong = 10,
-        UnsignedLongLong = 11,
-        Float = 12,
-        Double = 13,
-        LongDouble = 14,
-        Pointer = 15,
+        Void = 118,
+        Bool = 66,
+        Char = 99,
+        UnsignedChar = 67,
+        Short = 115,
+        UnsignedShort = 83,
+        Int = 105,
+        UnsignedInt = 73,
+        Long = 106,
+        UnsignedLong = 74,
+        LongLong = 108,
+        UnsignedLongLong = 76,
+        Float = 102,
+        Double = 100,
+        LongDouble = 68,
+        Pointer = 112,
     };
 
     /** SNBT格式 */
@@ -149,6 +157,28 @@ declare module "iListenAttentively" {
         Compound = 10,
         IntArray = 11,
     };
+
+    export type NativeValue<T extends NativeType> =
+        T extends NativeType.Void ? void :
+        T extends NativeType.Bool ? boolean :
+        number;
+
+    export type NativeParameterValue<T extends NativeType> =
+        T extends NativeType.Void ? never : NativeValue<T>;
+
+    export type NativeArguments<T extends readonly NativeType[]> = {
+        -readonly [K in keyof T]: T[K] extends NativeType
+            ? NativeParameterValue<T[K]>
+            : never;
+    };
+
+    export type HookCallback<
+        TResult extends NativeType,
+        TParams extends readonly NativeType[]
+    > = (
+        origin: (...params: NativeArguments<TParams>) => NativeValue<TResult>,
+        ...params: NativeArguments<TParams>
+    ) => NativeValue<TResult>;
 
     /** 序列化实例数据 */
     export type SerializeTypeData<
@@ -277,6 +307,28 @@ declare module "iListenAttentively" {
         priority?: EventPriority,
         pluginName?: string
     ): number;
+    export function hook<
+        const TResult extends NativeType,
+        const TParams extends readonly NativeType[]
+    >(
+        address: number,
+        callback: HookCallback<TResult, TParams>,
+        resultType: TResult,
+        paramsTypes: TParams,
+        priority?: HookPriority,
+        suspendThreads?: boolean,
+        pluginName?: string
+    ): number;
+    export function hook<const TResult extends NativeType>(
+        address: number,
+        callback: HookCallback<TResult, NativeType.Pointer[]>,
+        resultType: TResult,
+        paramsTypes?: undefined,
+        priority?: HookPriority,
+        suspendThreads?: boolean,
+        pluginName?: string
+    ): number;
+    export function unhook(hookId: number, suspendThreads?: boolean): boolean;
     /** 推送事件 */
     export function publish(eventName: string, eventData: Record<string, any> | NbtCompound, modName?: string): void;
 
@@ -370,7 +422,15 @@ declare module "iListenAttentively" {
     export function getAddressFromSignature(signature: string): number;
     export function getAddressFromSignature(dllName: string, signature: string): number;
     export function getImageRange(dllName: string): { start: number, end: number, size: number };
-    export function dynamicCall(address: number, returnType: NativeType, paramsType: NativeType[], params: number[]): any;
+    export function dynamicCall<
+        const TResult extends NativeType,
+        const TParams extends readonly NativeType[]
+    >(
+        address: number,
+        returnType: TResult,
+        paramsType: TParams,
+        params: NativeArguments<TParams>
+    ): NativeValue<TResult>;
     export function mallocMemory(size: number): number;
     export function freeMemory(address: number): void;
     export function alignedMallocMemory(size: number, alignment: number): number;

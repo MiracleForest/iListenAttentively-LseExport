@@ -1,5 +1,6 @@
 #define LL_MEMORY_OPERATORS
 #include "ila-lseexport/LseExport.h"
+#include "ila-lseexport/HookManager.h"
 #include <Windows.h>
 #include <ll/api/Versions.h>
 #include <ll/api/event/EventBus.h>
@@ -58,7 +59,12 @@ bool LseExport::load() {
 
 bool LseExport::enable() { return true; }
 
-bool LseExport::disable() { return true; }
+bool LseExport::disable() {
+    HookManager::getInstance().unhookAll();
+    return true;
+}
+
+bool LseExport::unload() { return true; }
 
 void LseExport::modify(void* ptr, size_t length, brstd::function_ref<void()> callback, bool pauseThread) {
     std::optional<ll::thread::GlobalThreadPauser> pauser;

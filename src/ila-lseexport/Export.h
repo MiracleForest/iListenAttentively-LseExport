@@ -1,4 +1,5 @@
 #pragma once
+#include "ila-lseexport/HookManager.h"
 #include "ila-lseexport/LseExport.h"
 #include "ila-lseexport/RemoteCallAPI.h" // 需要使用 include_alias 替换掉
 #include "ila-lseexport/event/LseEvent.h"
@@ -51,7 +52,6 @@
         );                                                                                                             \
         return {};                                                                                                     \
     })
-
 
 #define EXPORT_IMPL(VERSION)                                                                                             \
     namespace ll::event {                                                                                                \
@@ -526,24 +526,344 @@
             return {};                                                                                                   \
         });                                                                                                              \
                                                                                                                          \
-        enum class NativeTypes : uchar {                                                                                 \
-            Void,                                                                                                        \
-            Bool,                                                                                                        \
-            Char,                                                                                                        \
-            UnsignedChar,                                                                                                \
-            Short,                                                                                                       \
-            UnsignedShort,                                                                                               \
-            Int,                                                                                                         \
-            UnsignedInt,                                                                                                 \
-            Long,                                                                                                        \
-            UnsignedLong,                                                                                                \
-            LongLong,                                                                                                    \
-            UnsignedLongLong,                                                                                            \
-            Float,                                                                                                       \
-            Double,                                                                                                      \
-            LongDouble,                                                                                                  \
-            Pointer                                                                                                      \
+        enum class NativeTypes : DCsigchar {                                                                             \
+            Void             = DC_SIGCHAR_VOID,                                                                          \
+            Bool             = DC_SIGCHAR_BOOL,                                                                          \
+            Char             = DC_SIGCHAR_CHAR,                                                                          \
+            UnsignedChar     = DC_SIGCHAR_UCHAR,                                                                         \
+            Short            = DC_SIGCHAR_SHORT,                                                                         \
+            UnsignedShort    = DC_SIGCHAR_USHORT,                                                                        \
+            Int              = DC_SIGCHAR_INT,                                                                           \
+            UnsignedInt      = DC_SIGCHAR_UINT,                                                                          \
+            Long             = DC_SIGCHAR_LONG,                                                                          \
+            UnsignedLong     = DC_SIGCHAR_ULONG,                                                                         \
+            LongLong         = DC_SIGCHAR_LONGLONG,                                                                      \
+            UnsignedLongLong = DC_SIGCHAR_ULONGLONG,                                                                     \
+            Float            = DC_SIGCHAR_FLOAT,                                                                         \
+            Double           = DC_SIGCHAR_DOUBLE,                                                                        \
+            LongDouble       = 'D',                                                                                      \
+            Pointer          = DC_SIGCHAR_POINTER                                                                        \
         };                                                                                                               \
+        RemoteCall::exportAs("nextHookCallbackId", [] {                                                                 \
+            return HookManager::getInstance().nextCallbackId();                                                         \
+        });                                                                                                              \
+        RemoteCall::exportAs("markHookOriginCalled", [](HookManager::HookId id) {                                        \
+            return HookManager::getInstance().markOriginCalled(id);                                                      \
+        });                                                                                                              \
+        RemoteCall::exportAs(                                                                                            \
+            "hook",                                                                                                     \
+            [this](std::vector<RemoteCall::ValueType> args) -> ll::Expected<HookManager::HookId> {                      \
+                    if (args.size() < 5 || args.size() > 7)                                                              \
+                        return ll::makeStringError("Invalid number of arguments");                                       \
+                    auto   pluginName   = RemoteCall::extract<std::string>(std::move(args[0]));                          \
+                    auto   callbackName = RemoteCall::extract<std::string>(std::move(args[1]));                          \
+                    auto   address      = RemoteCall::extract<uintptr_t>(std::move(args[2]));                            \
+                    auto   resultType   = RemoteCall::extract<NativeTypes>(std::move(args[3]));                          \
+                    auto   paramsTypes  = RemoteCall::extract<std::vector<NativeTypes>>(std::move(args[4]));             \
+                    auto   priority     = args.size() >= 6                                                               \
+                                            ? RemoteCall::extract<ll::memory::HookPriority>(std::move(args[5]))          \
+                                            : ll::memory::HookPriority::Normal;                                          \
+                    bool suspendThreads =                                                                                \
+                        args.size() >= 7 ? RemoteCall::extract<bool>(std::move(args[6])) : true;                         \
+                    if (!RemoteCall::hasFunc(pluginName, callbackName))                                                  \
+                        return ll::makeStringError("Hook callback not found");                                           \
+                    std::string signature;                                                                               \
+                    signature.reserve(paramsTypes.size() + 2);                                                           \
+                    for (auto type : paramsTypes) {                                                                      \
+                        if (type == NativeTypes::Void || !magic_enum::enum_contains<NativeTypes>(type))                  \
+                            return ll::makeStringError("Invalid hook parameter type");                                   \
+                        signature.push_back(                                                                             \
+                            type == NativeTypes::LongDouble ? DC_SIGCHAR_DOUBLE : static_cast<DCsigchar>(type)           \
+                        );                                                                                               \
+                    }                                                                                                    \
+                    if (!magic_enum::enum_contains<NativeTypes>(resultType))                                             \
+                        return ll::makeStringError("Invalid hook result type");                                          \
+                    auto resultSig = resultType == NativeTypes::LongDouble ? DC_SIGCHAR_DOUBLE                           \
+                                                                           : static_cast<DCsigchar>(resultType);         \
+                    signature.push_back(DC_SIGCHAR_ENDARG);                                                              \
+                    signature.push_back(resultSig);                                                                      \
+                                                                                                                         \
+                    static constexpr auto invokeOriginal =                                                               \
+                        [](uintptr_t                          original,                                                  \
+                           NativeTypes                        resultType,                                                \
+                           std::vector<NativeTypes> const&    paramsTypes,                                               \
+                           std::vector<RemoteCall::ValueType> params) -> RemoteCall::ValueType {                         \
+                        auto* vm = dcNewCallVM(4096);                                                                    \
+                        if (!vm) throw std::runtime_error("Failed to create dynamic call VM");                           \
+                        struct Remover {                                                                                 \
+                            DCCallVM* vm;                                                                                \
+                            ~Remover() { dcFree(vm); }                                                                   \
+                        } remover{vm};                                                                                   \
+                        dcMode(vm, DC_CALL_C_DEFAULT);                                                                   \
+                                                                                                                         \
+                        for (size_t i = 0; i < params.size(); ++i) {                                                     \
+                            switch (paramsTypes[i]) {                                                                    \
+                            case NativeTypes::Bool:                                                                      \
+                                dcArgBool(vm, RemoteCall::extract<bool>(std::move(params[i])));                          \
+                                break;                                                                                   \
+                            case NativeTypes::Char:                                                                      \
+                                dcArgChar(vm, RemoteCall::extract<char>(std::move(params[i])));                          \
+                                break;                                                                                   \
+                            case NativeTypes::UnsignedChar:                                                              \
+                                dcArgChar(vm, std::bit_cast<char>(RemoteCall::extract<uchar>(std::move(params[i]))));    \
+                                break;                                                                                   \
+                            case NativeTypes::Short:                                                                     \
+                                dcArgShort(vm, RemoteCall::extract<short>(std::move(params[i])));                        \
+                                break;                                                                                   \
+                            case NativeTypes::UnsignedShort:                                                             \
+                                dcArgShort(                                                                              \
+                                    vm,                                                                                  \
+                                    std::bit_cast<short>(RemoteCall::extract<ushort>(std::move(params[i])))              \
+                                );                                                                                       \
+                                break;                                                                                   \
+                            case NativeTypes::Int:                                                                       \
+                                dcArgInt(vm, RemoteCall::extract<int>(std::move(params[i])));                            \
+                                break;                                                                                   \
+                            case NativeTypes::UnsignedInt:                                                               \
+                                dcArgInt(vm, std::bit_cast<int>(RemoteCall::extract<uint>(std::move(params[i]))));       \
+                                break;                                                                                   \
+                            case NativeTypes::Long:                                                                      \
+                                dcArgLong(vm, RemoteCall::extract<long>(std::move(params[i])));                          \
+                                break;                                                                                   \
+                            case NativeTypes::UnsignedLong:                                                              \
+                                dcArgLong(vm, std::bit_cast<long>(RemoteCall::extract<ulong>(std::move(params[i]))));    \
+                                break;                                                                                   \
+                            case NativeTypes::LongLong:                                                                  \
+                                dcArgLongLong(vm, RemoteCall::extract<llong>(std::move(params[i])));                     \
+                                break;                                                                                   \
+                            case NativeTypes::UnsignedLongLong:                                                          \
+                                dcArgLongLong(                                                                           \
+                                    vm,                                                                                  \
+                                    std::bit_cast<llong>(RemoteCall::extract<ullong>(std::move(params[i])))              \
+                                );                                                                                       \
+                                break;                                                                                   \
+                            case NativeTypes::Float:                                                                     \
+                                dcArgFloat(vm, RemoteCall::extract<float>(std::move(params[i])));                        \
+                                break;                                                                                   \
+                            case NativeTypes::Double:                                                                    \
+                                dcArgDouble(vm, RemoteCall::extract<double>(std::move(params[i])));                      \
+                                break;                                                                                   \
+                            case NativeTypes::LongDouble:                                                                \
+                                dcArgDouble(                                                                             \
+                                    vm,                                                                                  \
+                                    std::bit_cast<double>(RemoteCall::extract<ldouble>(std::move(params[i])))            \
+                                );                                                                                       \
+                                break;                                                                                   \
+                            case NativeTypes::Pointer:                                                                   \
+                                dcArgPointer(                                                                            \
+                                    vm,                                                                                  \
+                                    reinterpret_cast<void*>(RemoteCall::extract<uintptr_t>(std::move(params[i])))        \
+                                );                                                                                       \
+                                break;                                                                                   \
+                            default:                                                                                     \
+                                throw std::runtime_error("Invalid hook parameter type");                                 \
+                            }                                                                                            \
+                        }                                                                                                \
+                                                                                                                         \
+                        auto target = reinterpret_cast<void*>(original);                                                 \
+                        switch (resultType) {                                                                            \
+                        case NativeTypes::Void:                                                                          \
+                            dcCallVoid(vm, target);                                                                      \
+                            return RemoteCall::pack(std::nullptr_t{});                                                   \
+                        case NativeTypes::Bool:                                                                          \
+                            return RemoteCall::pack(static_cast<bool>(dcCallBool(vm, target)));                          \
+                        case NativeTypes::Char:                                                                          \
+                            return RemoteCall::pack(dcCallChar(vm, target));                                             \
+                        case NativeTypes::UnsignedChar:                                                                  \
+                            return RemoteCall::pack(std::bit_cast<uchar>(dcCallChar(vm, target)));                       \
+                        case NativeTypes::Short:                                                                         \
+                            return RemoteCall::pack(dcCallShort(vm, target));                                            \
+                        case NativeTypes::UnsignedShort:                                                                 \
+                            return RemoteCall::pack(std::bit_cast<ushort>(dcCallShort(vm, target)));                     \
+                        case NativeTypes::Int:                                                                           \
+                            return RemoteCall::pack(dcCallInt(vm, target));                                              \
+                        case NativeTypes::UnsignedInt:                                                                   \
+                            return RemoteCall::pack(std::bit_cast<uint>(dcCallInt(vm, target)));                         \
+                        case NativeTypes::Long:                                                                          \
+                            return RemoteCall::pack(dcCallLong(vm, target));                                             \
+                        case NativeTypes::UnsignedLong:                                                                  \
+                            return RemoteCall::pack(std::bit_cast<ulong>(dcCallLong(vm, target)));                       \
+                        case NativeTypes::LongLong:                                                                      \
+                            return RemoteCall::pack(dcCallLongLong(vm, target));                                         \
+                        case NativeTypes::UnsignedLongLong:                                                              \
+                            return RemoteCall::pack(std::bit_cast<ullong>(dcCallLongLong(vm, target)));                  \
+                        case NativeTypes::Float:                                                                         \
+                            return RemoteCall::pack(dcCallFloat(vm, target));                                            \
+                        case NativeTypes::Double:                                                                        \
+                            return RemoteCall::pack(dcCallDouble(vm, target));                                           \
+                        case NativeTypes::LongDouble:                                                                    \
+                            return RemoteCall::pack(std::bit_cast<ldouble>(dcCallDouble(vm, target)));                   \
+                        case NativeTypes::Pointer:                                                                       \
+                            return RemoteCall::pack(reinterpret_cast<uintptr_t>(dcCallPointer(vm, target)));             \
+                        default:                                                                                         \
+                            throw std::runtime_error("Invalid hook result type");                                        \
+                        }                                                                                                \
+                    };                                                                                                   \
+                                                                                                                         \
+                    static constexpr auto readArguments = [](DCArgs*                         nativeArgs,                 \
+                                                             std::vector<NativeTypes> const& paramsTypes) {              \
+                        std::vector<RemoteCall::ValueType> params;                                                       \
+                        params.reserve(paramsTypes.size());                                                              \
+                        for (auto type : paramsTypes) {                                                                  \
+                            switch (type) {                                                                              \
+                            case NativeTypes::Bool:                                                                      \
+                                params.emplace_back(RemoteCall::pack(static_cast<bool>(dcbArgBool(nativeArgs))));        \
+                                break;                                                                                   \
+                            case NativeTypes::Char:                                                                      \
+                                params.emplace_back(RemoteCall::pack(dcbArgChar(nativeArgs)));                           \
+                                break;                                                                                   \
+                            case NativeTypes::UnsignedChar:                                                              \
+                                params.emplace_back(RemoteCall::pack(dcbArgUChar(nativeArgs)));                          \
+                                break;                                                                                   \
+                            case NativeTypes::Short:                                                                     \
+                                params.emplace_back(RemoteCall::pack(dcbArgShort(nativeArgs)));                          \
+                                break;                                                                                   \
+                            case NativeTypes::UnsignedShort:                                                             \
+                                params.emplace_back(RemoteCall::pack(dcbArgUShort(nativeArgs)));                         \
+                                break;                                                                                   \
+                            case NativeTypes::Int:                                                                       \
+                                params.emplace_back(RemoteCall::pack(dcbArgInt(nativeArgs)));                            \
+                                break;                                                                                   \
+                            case NativeTypes::UnsignedInt:                                                               \
+                                params.emplace_back(RemoteCall::pack(dcbArgUInt(nativeArgs)));                           \
+                                break;                                                                                   \
+                            case NativeTypes::Long:                                                                      \
+                                params.emplace_back(RemoteCall::pack(dcbArgLong(nativeArgs)));                           \
+                                break;                                                                                   \
+                            case NativeTypes::UnsignedLong:                                                              \
+                                params.emplace_back(RemoteCall::pack(dcbArgULong(nativeArgs)));                          \
+                                break;                                                                                   \
+                            case NativeTypes::LongLong:                                                                  \
+                                params.emplace_back(RemoteCall::pack(dcbArgLongLong(nativeArgs)));                       \
+                                break;                                                                                   \
+                            case NativeTypes::UnsignedLongLong:                                                          \
+                                params.emplace_back(RemoteCall::pack(dcbArgULongLong(nativeArgs)));                      \
+                                break;                                                                                   \
+                            case NativeTypes::Float:                                                                     \
+                                params.emplace_back(RemoteCall::pack(dcbArgFloat(nativeArgs)));                          \
+                                break;                                                                                   \
+                            case NativeTypes::Double:                                                                    \
+                            case NativeTypes::LongDouble:                                                                \
+                                params.emplace_back(RemoteCall::pack(dcbArgDouble(nativeArgs)));                         \
+                                break;                                                                                   \
+                            case NativeTypes::Pointer:                                                                   \
+                                params.emplace_back(                                                                     \
+                                    RemoteCall::pack(reinterpret_cast<uintptr_t>(dcbArgPointer(nativeArgs)))             \
+                                );                                                                                       \
+                                break;                                                                                   \
+                            default:                                                                                     \
+                                throw std::runtime_error("Invalid hook parameter type");                                 \
+                            }                                                                                            \
+                        }                                                                                                \
+                        return params;                                                                                   \
+                    };                                                                                                   \
+                                                                                                                         \
+                    static constexpr auto writeResult =                                                                  \
+                        [](DCValue* nativeResult, NativeTypes resultType, RemoteCall::ValueType result) {                \
+                            switch (resultType) {                                                                        \
+                            case NativeTypes::Void:                                                                      \
+                                break;                                                                                   \
+                            case NativeTypes::Bool:                                                                      \
+                                nativeResult->B = RemoteCall::extract<bool>(std::move(result));                          \
+                                break;                                                                                   \
+                            case NativeTypes::Char:                                                                      \
+                                nativeResult->c = RemoteCall::extract<char>(std::move(result));                          \
+                                break;                                                                                   \
+                            case NativeTypes::UnsignedChar:                                                              \
+                                nativeResult->C = RemoteCall::extract<uchar>(std::move(result));                         \
+                                break;                                                                                   \
+                            case NativeTypes::Short:                                                                     \
+                                nativeResult->s = RemoteCall::extract<short>(std::move(result));                         \
+                                break;                                                                                   \
+                            case NativeTypes::UnsignedShort:                                                             \
+                                nativeResult->S = RemoteCall::extract<ushort>(std::move(result));                        \
+                                break;                                                                                   \
+                            case NativeTypes::Int:                                                                       \
+                                nativeResult->i = RemoteCall::extract<int>(std::move(result));                           \
+                                break;                                                                                   \
+                            case NativeTypes::UnsignedInt:                                                               \
+                                nativeResult->I = RemoteCall::extract<uint>(std::move(result));                          \
+                                break;                                                                                   \
+                            case NativeTypes::Long:                                                                      \
+                                nativeResult->j = RemoteCall::extract<long>(std::move(result));                          \
+                                break;                                                                                   \
+                            case NativeTypes::UnsignedLong:                                                              \
+                                nativeResult->J = RemoteCall::extract<ulong>(std::move(result));                         \
+                                break;                                                                                   \
+                            case NativeTypes::LongLong:                                                                  \
+                                nativeResult->l = RemoteCall::extract<llong>(std::move(result));                         \
+                                break;                                                                                   \
+                            case NativeTypes::UnsignedLongLong:                                                          \
+                                nativeResult->L = RemoteCall::extract<ullong>(std::move(result));                        \
+                                break;                                                                                   \
+                            case NativeTypes::Float:                                                                     \
+                                nativeResult->f = RemoteCall::extract<float>(std::move(result));                         \
+                                break;                                                                                   \
+                            case NativeTypes::Double:                                                                    \
+                            case NativeTypes::LongDouble:                                                                \
+                                nativeResult->d = RemoteCall::extract<double>(std::move(result));                        \
+                                break;                                                                                   \
+                            case NativeTypes::Pointer:                                                                   \
+                                nativeResult->p =                                                                        \
+                                    reinterpret_cast<void*>(RemoteCall::extract<uintptr_t>(std::move(result)));          \
+                                break;                                                                                   \
+                            default:                                                                                     \
+                                throw std::runtime_error("Invalid hook result type");                                    \
+                            }                                                                                            \
+                        };                                                                                               \
+                                                                                                                         \
+                    auto callback = [this, pluginName, callbackName, resultType, resultSig, paramsTypes](                \
+                                        HookManager::HookId id,                                                          \
+                                        uintptr_t           original,                                                    \
+                                        DCArgs*             nativeArgs,                                                  \
+                                        DCValue*            nativeResult                                                 \
+                                    ) -> DCsigchar {                                                                     \
+                        auto                  params = readArguments(nativeArgs, paramsTypes);                           \
+                        RemoteCall::ValueType result;                                                                    \
+                        if (!RemoteCall::hasFunc(pluginName, callbackName)) {                                            \
+                            HookManager::getInstance().unhook(id);                                                \
+                            result = invokeOriginal(original, resultType, paramsTypes, std::move(params));               \
+                        } else {                                                                                         \
+                            try {                                                                                        \
+                                result = RemoteCall::importAs<RemoteCall::ValueType(                                     \
+                                    uintptr_t,                                                                           \
+                                    std::vector<RemoteCall::ValueType>,                                                  \
+                                    HookManager::HookId                                                                  \
+                                )>(pluginName, callbackName)(original, params, id);                                      \
+                            } catch (...) {                                                                              \
+                                getSelf().getLogger().error(                                                             \
+                                    "Failed to execute hook callback {0} in {1} plugin",                                 \
+                                    callbackName,                                                                        \
+                                    pluginName                                                                           \
+                                );                                                                                       \
+                                ll::error_utils::printCurrentException(getSelf().getLogger());                           \
+                                auto& manager = HookManager::getInstance();                                              \
+                                if (!RemoteCall::hasFunc(pluginName, callbackName)) manager.unhook(id);           \
+                                if (manager.wasOriginCalled(id)) {                                                       \
+                                    std::memset(nativeResult, 0, sizeof(*nativeResult));                                 \
+                                    return resultSig;                                                                    \
+                                }                                                                                        \
+                                result = invokeOriginal(original, resultType, paramsTypes, std::move(params));           \
+                            }                                                                                            \
+                        }                                                                                                \
+                        writeResult(nativeResult, resultType, std::move(result));                                        \
+                        return resultSig;                                                                                \
+                    };                                                                                                   \
+                    return HookManager::getInstance().hook(                                                              \
+                        address,                                                                                         \
+                        std::move(signature),                                                                            \
+                        std::move(callback),                                                                             \
+                        priority,                                                                                        \
+                        suspendThreads                                                                                   \
+                    );                                                                                                   \
+            }                                                                                                            \
+        );                                                                                                               \
+        RemoteCall::exportAs("unhook", [](std::vector<RemoteCall::ValueType> args) -> ll::Expected<bool> {               \
+            if (args.empty() || args.size() > 2) return ll::makeStringError("Invalid number of arguments");              \
+            auto id             = RemoteCall::extract<HookManager::HookId>(std::move(args[0]));                          \
+            bool suspendThreads = args.size() >= 2 ? RemoteCall::extract<bool>(std::move(args[1])) : true;               \
+            return HookManager::getInstance().unhook(id, suspendThreads);                                                \
+        });                                                                                                              \
         RemoteCall::exportAs(                                                                                            \
             "dynamicCall",                                                                                               \
             [&](std::vector<RemoteCall::ValueType> args) -> ll::Expected<RemoteCall::ValueType> {                        \

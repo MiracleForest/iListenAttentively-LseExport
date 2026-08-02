@@ -15,6 +15,7 @@ public:
     bool load();
     bool enable();
     bool disable();
+    bool unload();
 
     void exportEventV1();
     void registerDefaultEventsAliasV1();
