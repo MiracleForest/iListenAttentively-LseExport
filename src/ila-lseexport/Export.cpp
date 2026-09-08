@@ -144,8 +144,8 @@ void LseExport::exportEvent() {
         }
     });
     RemoteCall::exportAs("getDimensionIdFromName", [](std::string const& dimensionName) -> ll::Expected<int> {
-        auto id = VanillaDimensions::fromString(dimensionName).id;
-        if (id == VanillaDimensions::Undefined().id) return ll::makeStringError("Dimension name not found");
+        auto id = static_cast<int>(VanillaDimensions::fromString(dimensionName));
+        if (id == static_cast<int>(VanillaDimensions::Undefined())) return ll::makeStringError("Dimension name not found");
         return id;
     });
     RemoteCall::exportAs("getDimensionNameFromId", [](int dimensionId) -> ll::Expected<std::string> {
@@ -475,7 +475,14 @@ void LseExport::exportEvent() {
         ll::memory::getDefaultAllocator().alignedRelease(reinterpret_cast<void*>(address));
     });
     RemoteCall::exportAs("getUsableMemorySize", [&](uintptr_t address) {
-        return ll::memory::getDefaultAllocator().getUsableSize(reinterpret_cast<void*>(address));
+        return ll::Overloaded{
+            [&](uint64 (Bedrock::Memory::IMemoryAllocator::*func)(void*)) {
+                return (ll::memory::getDefaultAllocator().*func)(reinterpret_cast<void*>(address));
+            },
+            [&](uint64 (Bedrock::Memory::IMemoryAllocator::*func)(void*, bool)) {
+                return (ll::memory::getDefaultAllocator().*func)(reinterpret_cast<void*>(address), false);
+            },
+        }(&Bedrock::Memory::IMemoryAllocator::getUsableSize);
     });
     RemoteCall::exportAs("memcpyMemory", [&](std::vector<RemoteCall::ValueType> args) -> ll::Expected<> {
         if (args.size() < 3 || args.size() > 4) return ll::makeStringError("Too many arguments");

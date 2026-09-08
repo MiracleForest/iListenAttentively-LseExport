@@ -1,9 +1,9 @@
 on:
   pull_request:
   push:
-    paths: ["src/**", "lib/**", "xmake.lua"]
+    paths: ["src/**", "assets/**", "xmake.lua"]
   workflow_dispatch:
-  
+
 jobs:
   build:
     runs-on: windows-latest
@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: xmake-io/github-action-setup-xmake@v1
-      
+
       - uses: actions/cache@v4
         with:
           path: |
@@ -20,17 +20,35 @@ jobs:
           restore-keys: |
             xmake-
 
+      - uses: ZhongRuoyu/setup-llvm@v0
+        with:
+          llvm-version: 22
+
       - run: |
           xmake repo -u
 
-      - run: |
-          xmake f -a x64 -m release -p windows -v -y
-
-      - run: |
+      - name: Build (without symbols)
+        run: |
+          New-Item -ItemType Directory -Force dist\plain | Out-Null
+          xmake f -a x64 -m release -p windows --symbols=n -y
           xmake -v -y
+          Move-Item -LiteralPath bin -Destination dist\plain\
+        shell: pwsh
+
+      - name: Build (with symbols)
+        run: |
+          New-Item -ItemType Directory -Force dist\symbols | Out-Null
+          xmake f -a x64 -m release -p windows --symbols=y -y
+          xmake -v -y
+          Move-Item -LiteralPath bin -Destination dist\symbols\
+        shell: pwsh
 
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}-windows-x64-${{ github.sha }}
-          path: |
-            bin/
+          path: dist/plain/bin/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-symbols-windows-x64-${{ github.sha }}
+          path: dist/symbols/bin/

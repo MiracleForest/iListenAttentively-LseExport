@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-08
+
+### Changed
+
+- Restructured the entire mod @zimuya4153
+- Adapted to LeviLamina 26.20.x and 26.30.x @zimuya4153
+
 ## [0.4.0] - 2026-08-02
 
 ### Added
@@ -158,7 +165,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initialize the module @zimuya4153
 
-[Unreleased]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.2.3...v0.3.0
 [0.2.3]: https://github.com/MiracleForest/iListenAttentively-LseExport/compare/v0.2.2...v0.2.3

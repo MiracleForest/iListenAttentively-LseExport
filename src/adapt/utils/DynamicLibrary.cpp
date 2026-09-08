@@ -64,20 +64,35 @@ std::wstring makeRandomSuffix() noexcept {
     }
     return result;
 }
+
+std::optional<std::system_error> writeFile(std::filesystem::path const& file, std::span<uint8_t const> data) noexcept {
+    std::error_code ec;
+    std::filesystem::create_directories(file.parent_path(), ec);
+    if (ec) return std::system_error{ec};
+    std::ofstream stream;
+    stream.open(file, std::ios_base::out | std::ios_base::binary);
+    if (!stream.is_open()) return std::system_error{std::make_error_code(std::errc::io_error)};
+    stream.write(reinterpret_cast<char const*>(data.data()), static_cast<std::streamsize>(data.size()));
+    stream.close();
+    if (!stream) return std::system_error{std::make_error_code(std::errc::io_error)};
+    return std::nullopt;
+}
 } // namespace
 
 DynamicLibrary::DynamicLibrary() = default;
 DynamicLibrary::DynamicLibrary(std::filesystem::path const& path) { load(path); }
-DynamicLibrary::DynamicLibrary(std::span<std::uint8_t const> data) { load(data); }
+DynamicLibrary::DynamicLibrary(std::span<uint8_t const> data, std::span<uint8_t const> pdb) { load(data, pdb); }
 DynamicLibrary::~DynamicLibrary() { free(); }
 DynamicLibrary::DynamicLibrary(DynamicLibrary&& other) noexcept
 : lib{std::exchange(other.lib, nullptr)},
-  tempFile{std::move(other.tempFile)} {}
+  tempFile{std::move(other.tempFile)},
+  pdbFile{std::move(other.pdbFile)} {}
 DynamicLibrary& DynamicLibrary::operator=(DynamicLibrary&& other) noexcept {
     if (this != &other) {
-        if (lib) (void)free();
+        (void)free();
         lib      = std::exchange(other.lib, nullptr);
         tempFile = std::move(other.tempFile);
+        pdbFile  = std::move(other.pdbFile);
     }
     return *this;
 }
@@ -91,7 +106,7 @@ std::optional<std::system_error> DynamicLibrary::load(std::filesystem::path cons
     return {};
 }
 
-std::optional<std::system_error> DynamicLibrary::load(std::span<std::uint8_t const> data) noexcept {
+std::optional<std::system_error> DynamicLibrary::load(std::span<uint8_t const> data, std::span<uint8_t const> pdb) noexcept {
     if (lib) return std::system_error{{}};
     auto tempDir = getTempDir();
     if (!tempDir) return tempDir.error();
@@ -100,16 +115,12 @@ std::optional<std::system_error> DynamicLibrary::load(std::span<std::uint8_t con
              / (L"iListenAttentively-LseExport-" + std::to_wstring(GetCurrentProcessId()) + L"-" + makeRandomSuffix()
                 + L".dll");
 
-    std::error_code ec;
-    {
-        std::ofstream fWrite;
-        std::filesystem::create_directories(tempFile.parent_path(), ec);
-        if (ec) return std::system_error{ec};
-        fWrite.open(tempFile, std::ios_base::out | std::ios_base::binary);
-        if (!fWrite.is_open()) return std::system_error{std::make_error_code(std::errc::io_error)};
-        fWrite.write(reinterpret_cast<char const*>(data.data()), static_cast<std::streamsize>(data.size()));
-        fWrite.close();
-        if (!fWrite) return std::system_error{std::make_error_code(std::errc::io_error)};
+    if (auto error = writeFile(tempFile, data)) return error;
+
+    if (!pdb.empty()) {
+        pdbFile = tempFile;
+        pdbFile.replace_extension(L".pdb");
+        if (auto error = writeFile(pdbFile, pdb)) return error;
     }
 
     return load(tempFile);
@@ -124,6 +135,11 @@ std::optional<std::system_error> DynamicLibrary::free() noexcept {
         std::error_code ec;
         std::filesystem::remove(tempFile, ec);
         tempFile.clear();
+    }
+    if (!pdbFile.empty()) {
+        std::error_code ec;
+        std::filesystem::remove(pdbFile, ec);
+        pdbFile.clear();
     }
     return {};
 }

@@ -2,7 +2,15 @@
 
 namespace ll {
 
-static io::Logger logger;
+class MemoryAllocator : public Bedrock::Memory::IMemoryAllocator {
+    void* allocate(uint64_t) override { return nullptr; }
+    void  release(void*) override {}
+    void* alignedAllocate(uint64_t, uint64_t) override { return nullptr; }
+    void  alignedRelease(void*) override {}
+};
+
+static io::Logger      logger;
+static MemoryAllocator allocator;
 
 void ll::OutputStream::print(std::string_view) const noexcept {}
 namespace io {
@@ -26,7 +34,9 @@ io::Logger&                Mod::getLogger() const { return logger; }
 std::shared_ptr<NativeMod> NativeMod::getByHandle(void*) { return {}; }
 } // namespace mod
 namespace memory {
-FuncPtr resolveSymbol(char const*) { return nullptr; }
+FuncPtr                            resolveSymbol(char const*) { return nullptr; }
+Bedrock::Memory::IMemoryAllocator& getDefaultAllocator() { return allocator; }
+void                               throwMemoryException(size_t) { throw; }
 } // namespace memory
 ll::data::Version getGameVersion() { return {}; }
 ll::data::Version getLoaderVersion() { return {}; }

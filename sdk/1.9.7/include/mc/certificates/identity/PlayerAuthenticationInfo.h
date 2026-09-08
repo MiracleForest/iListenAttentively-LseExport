@@ -1,0 +1,54 @@
+#pragma once
+
+#include "mc/_HeaderOutputPredefine.h"
+
+// auto generated inclusion list
+#include "mc/platform/UUID.h"
+
+struct PlayerAuthenticationInfo {
+public:
+    // member variables
+    // NOLINTBEGIN
+    ::ll::TypedStorage<8, 32, ::std::string> Xuid;
+    ::ll::TypedStorage<8, 32, ::std::string> PlayFabId;
+    ::ll::TypedStorage<8, 32, ::std::string> NintendoId;
+    ::ll::TypedStorage<8, 32, ::std::string> PsnId;
+    ::ll::TypedStorage<8, 32, ::std::string> XboxLiveName;
+    ::ll::TypedStorage<8, 32, ::std::string> NintendoName;
+    ::ll::TypedStorage<8, 32, ::std::string> PlayStationName;
+    ::ll::TypedStorage<8, 32, ::std::string> PublicKey;
+    ::ll::TypedStorage<8, 16, ::mce::UUID>   AuthenticatedUuid;
+    // NOLINTEND
+
+public:
+    // member functions
+    // NOLINTBEGIN
+    MCAPI PlayerAuthenticationInfo();
+
+    MCAPI PlayerAuthenticationInfo(::PlayerAuthenticationInfo&&);
+
+    MCAPI PlayerAuthenticationInfo(::PlayerAuthenticationInfo const&);
+
+    MCAPI ::PlayerAuthenticationInfo& operator=(::PlayerAuthenticationInfo&&);
+
+    MCAPI ::PlayerAuthenticationInfo& operator=(::PlayerAuthenticationInfo const&);
+
+    MCAPI ~PlayerAuthenticationInfo();
+    // NOLINTEND
+
+public:
+    // constructor thunks
+    // NOLINTBEGIN
+    MCAPI void* $ctor();
+
+    MCAPI void* $ctor(::PlayerAuthenticationInfo&&);
+
+    MCAPI void* $ctor(::PlayerAuthenticationInfo const&);
+    // NOLINTEND
+
+public:
+    // destructor thunk
+    // NOLINTBEGIN
+    MCFOLD void $dtor();
+    // NOLINTEND
+};

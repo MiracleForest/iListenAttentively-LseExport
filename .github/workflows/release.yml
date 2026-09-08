@@ -2,7 +2,7 @@ on:
   release:
     types:
       - published
-  
+
 jobs:
   build:
     runs-on: windows-latest
@@ -11,20 +11,38 @@ jobs:
 
       - uses: xmake-io/github-action-setup-xmake@v1
 
+      - uses: ZhongRuoyu/setup-llvm@v0
+        with:
+          llvm-version: 22
+
       - run: |
           xmake repo -u
 
-      - run: |
-          xmake f -a x64 -m release -p windows -y
-
-      - run: |
+      - name: Build (without symbols)
+        run: |
+          New-Item -ItemType Directory -Force dist\plain | Out-Null
+          xmake f -a x64 -m release -p windows --symbols=n -y
           xmake -v -y
+          Move-Item -LiteralPath bin -Destination dist\plain\
+        shell: pwsh
+
+      - name: Build (with symbols)
+        run: |
+          New-Item -ItemType Directory -Force dist\symbols | Out-Null
+          xmake f -a x64 -m release -p windows --symbols=y -y
+          xmake -v -y
+          Move-Item -LiteralPath bin -Destination dist\symbols\
+        shell: pwsh
 
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}-windows-x64-${{ github.sha }}
-          path: |
-            bin/
+          path: dist/plain/bin/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-symbols-windows-x64-${{ github.sha }}
+          path: dist/symbols/bin/
 
   update-release-notes:
     permissions:
@@ -56,14 +74,25 @@ jobs:
           name: ${{ github.event.repository.name }}-windows-x64-${{ github.sha }}
           path: artifact
 
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-symbols-windows-x64-${{ github.sha }}
+          path: artifact-symbols
+
       - run: |
           cp CHANGELOG.md LICENSE README.md artifact/
+          cp CHANGELOG.md LICENSE README.md artifact-symbols/
 
       - run: |
           zip -r ../${{ github.event.repository.name }}-windows-x64.zip *
         working-directory: artifact
 
+      - run: |
+          zip -r ../${{ github.event.repository.name }}-symbols-windows-x64.zip *
+        working-directory: artifact-symbols
+
       - uses: softprops/action-gh-release@v1
         with:
           files: |
             ${{ github.event.repository.name }}-windows-x64.zip
+            ${{ github.event.repository.name }}-symbols-windows-x64.zip

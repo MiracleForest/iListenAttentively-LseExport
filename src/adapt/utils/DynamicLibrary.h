@@ -13,11 +13,12 @@ class DynamicLibrary {
 public:
     HandleT               lib = nullptr;
     std::filesystem::path tempFile;
+    std::filesystem::path pdbFile;
 
 public:
     DynamicLibrary();
     DynamicLibrary(std::filesystem::path const& path);
-    DynamicLibrary(std::span<std::uint8_t const> data);
+    DynamicLibrary(std::span<uint8_t const> data, std::span<uint8_t const> pdb = {});
     ~DynamicLibrary();
 
     DynamicLibrary(DynamicLibrary&& other) noexcept;
@@ -26,7 +27,7 @@ public:
     DynamicLibrary& operator=(DynamicLibrary const&) = delete;
 
     std::optional<std::system_error> load(std::filesystem::path const& path) noexcept;
-    std::optional<std::system_error> load(std::span<std::uint8_t const> data) noexcept;
+    std::optional<std::system_error> load(std::span<uint8_t const> data, std::span<uint8_t const> pdb = {}) noexcept;
     std::optional<std::system_error> free() noexcept;
 
     void* getAddress(char const* name) noexcept;

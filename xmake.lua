@@ -21,6 +21,7 @@ add_requires(
     "parallel-hashmap v1.3.12",
     "concurrentqueue v1.0.4",
     "stb 2025.03.14",
+    "lz4 1.10.0",
     "preloader 1.16.2",
     "demangler v17.0.7",
     "dyncall 1.4"
@@ -29,6 +30,11 @@ add_requires(
 if not has_config("vs_runtime") then
     set_runtimes("MD")
 end
+
+option("symbols")
+    set_default(true)
+    set_showmenu(true)
+    set_description("embed/package PDB debug symbols of internal binaries")
 
 local internal_targets = {}
 for _, dir in ipairs(os.dirs("sdk/*")) do
@@ -52,7 +58,8 @@ for _, dir in ipairs(os.dirs("sdk/*")) do
             "NOMINMAX",
             "UNICODE",
             "_HAS_CXX23=1",
-            "_SILENCE_CXX20_IS_ALWAYS_EQUAL_DEPRECATION_WARNING=1"
+            "_SILENCE_CXX20_IS_ALWAYS_EQUAL_DEPRECATION_WARNING=1",
+            "LL_PLAT_S"
         )
         add_packages(
             "entt",
@@ -78,12 +85,16 @@ for _, dir in ipairs(os.dirs("sdk/*")) do
         set_exceptions("none")
         set_kind("shared")
         set_languages("cxx20")
-        set_symbols("debug")
+        if has_config("symbols") then
+            set_symbols("debug")
+        else
+            set_strip("all")
+        end
         add_files("src/ila-lseexport/**.cpp")
         add_includedirs("src")
         add_shflags("/DELAYLOAD:bedrock_runtime.dll")
 
-        add_includedirs(path.join(os.projectdir(), "sdk", levilamina_version, "include"))
+        add_sysincludedirs(path.join(os.projectdir(), "sdk", levilamina_version, "include"))
         add_linkdirs(path.join(os.projectdir(), "sdk", levilamina_version, "lib"))
         add_links("LeviLamina")
         add_links("LegacyRemoteCall")
@@ -101,6 +112,7 @@ for _, dir in ipairs(os.dirs("sdk/*")) do
                 target:set("toolchains", "clang-cl")
                 target:add(
                     "cxflags",
+                    "/EHs",
                     "-Wno-microsoft-cast",
                     "-Wno-invalid-offsetof",
                     "-Wno-c++2b-extensions",
@@ -115,7 +127,7 @@ for _, dir in ipairs(os.dirs("sdk/*")) do
             else
                 target:add("cxflags", "/EHa")
             end
-            target:add("defines", "LevilaminaVersion=" .. levilamina_version:gsub("%.", "_"))
+            target:add("defines", "LevilaminaVersion_" .. levilamina_version:gsub("%.", "_"))
 
             -- 获取 bedrockdata 版本并添加依赖和宏定义
             if not repository.pulled() then task.run("repo", { update = true } ) end -- 更新 repo
@@ -125,7 +137,7 @@ for _, dir in ipairs(os.dirs("sdk/*")) do
                 if package:name() == "bedrockdata" or package:fullname() == "bedrockdata" then
                     local version = package:version()
                     local mcversion = version and version:shortstr() or (package:version_str():match("([%d%.]+)") or package:version_str())
-                    target:add("defines", "MCVersion=" .. mcversion:gsub("%.", "_"))
+                    target:add("defines", "MCVersion_" .. mcversion:gsub("%.", "_"))
                 end
             end
             environment.leave()
@@ -135,20 +147,21 @@ for _, dir in ipairs(os.dirs("sdk/*")) do
             import("lib.detect.find_file")
             import("core.project.config")
 
-            local libdir = path.join(config.builddir(), ".prelink", "lib")
+            local prelink_root = path.join(config.builddir(), ".prelink", target:name())
+            local libdir = path.join(prelink_root, "lib")
             if os.exists(libdir) then os.rm(libdir) end
             os.mkdir(libdir)
 
             os.execv(path.join(os.projectdir(), "sdk", levilamina_version, "bin", "prelink.exe"), {
                 string.format("%s-%s-%s", get_config("target_type"), target:plat(), target:arch()),
-                path.join(config.builddir(), ".prelink"),
+                prelink_root,
                 path.join(os.projectdir(), "sdk", levilamina_version, "bin", "bedrock_runtime_data"),
                 table.unpack(target:objectfiles())
             })
 
             target:add("linkdirs", libdir)
             target:add("links", "bedrock_runtime_api")
-            target:add("links", "bedrock_runtime_var")
+            -- target:add("links", "bedrock_runtime_var")
         end)
 end
 
@@ -183,12 +196,12 @@ target("FakeLeviLamina")
     end)
 
 target("iListenAttentively-LseExport")
-    if #internal_targets > 0 then add_deps(table.unpack(internal_targets), { inherit = false }) end
+    for _, depname in ipairs(internal_targets) do add_deps(depname, { inherit = false }) end
     add_deps("FakeLeviLamina")
     add_files("src/adapt/**.cpp")
     add_includedirs("src")
     add_shflags("/DELAYLOAD:LeviLamina.dll")
-    add_packages("preloader", "demangler", "symbolprovider")
+    add_packages("preloader", "demangler", "symbolprovider", "lz4")
 
     after_load(function (target)
         import("core.project.project")
@@ -216,40 +229,89 @@ target("iListenAttentively-LseExport")
 
     before_build(function (target)
         local outfile = path.join(os.projectdir(), "src", "adapt", "Internal.h")
-        local arrays = {}
-        local entries = {}
         local prefix = "Internal_"
+        local symbols_enabled = has_config("symbols")
+
+        -- concatenate dll and pdb of all versions into one buffer, then compress it once
+        -- so repeated content across versions is deduplicated
+        local raw = {}
+        local entries = {}
+        local raw_size = 0
         for _, name in ipairs(internal_targets) do
             local dep = target:dep(name)
             if not dep then raise("target(%s): dep(%s) not found!", target:name(), name) end
 
-            local dllpath = dep:targetfile()
-            local data = io.readfile(dllpath, { encoding = "binary" } )
-            if not data then raise("target(%s): cannot read %s", target:name(), dllpath) end
-
             local version = name:sub(#prefix + 1)
-            local symbol = "kInternalData_" .. version:gsub("%W", "_")
-            local bytes = {}
-            for i = 1, #data do
-                table.insert(bytes, string.format("0x%02X", string.byte(data, i)))
+
+            local dllpath = dep:targetfile()
+            local dll_data = io.readfile(dllpath, { encoding = "binary" } )
+            if not dll_data then raise("target(%s): cannot read %s", target:name(), dllpath) end
+
+            local pdb_data
+            if symbols_enabled then
+                local pdbpath = dep:symbolfile()
+                pdb_data = pdbpath and os.isfile(pdbpath) and io.readfile(pdbpath, { encoding = "binary" } )
             end
-            table.insert(arrays, string.format("static constexpr uint8_t %s[] = {%s};", symbol, table.concat(bytes, ", ")))
-            table.insert(entries, string.format("    {ll::data::Version{\"%s\"}, std::span<uint8_t const>{%s, %d}}", version, symbol, #data))
+
+            table.insert(raw, dll_data)
+            local dll_offset = raw_size
+            raw_size = raw_size + #dll_data
+
+            local pdb_offset = raw_size
+            local pdb_size = 0
+            if pdb_data then
+                table.insert(raw, pdb_data)
+                pdb_size = #pdb_data
+                raw_size = raw_size + pdb_size
+            end
+
+            table.insert(entries, {
+                version = version,
+                dll_offset = dll_offset,
+                dll_size = #dll_data,
+                pdb_offset = pdb_offset,
+                pdb_size = pdb_size
+            })
         end
+
+        import("core.compress.lz4")
+        local compressed = lz4.block_compress(table.concat(raw))
+        local compressed_data = compressed:str()
+
+        local bytes = {}
+        for i = 1, #compressed_data do
+            table.insert(bytes, string.format("0x%02X", string.byte(compressed_data, i)))
+        end
+
         local header = {
             "#pragma once",
-            "#include \"fake_levilamina/Version.h\"",
+            '#include "fake_levilamina/Version.h"',
+            "#include <cstddef>",
             "#include <cstdint>",
             "#include <map>",
-            "#include <span>",
             "",
             "namespace mif::ila_lseexport {",
             ""
         }
         local content = table.concat(header, "\n")
-        content = content .. table.concat(arrays, "\n") .. "\n\n"
-        content = content .. "inline const std::map<ll::data::Version, std::span<std::uint8_t const>> internalBinaries{\n"
-        content = content .. table.concat(entries, ",\n") .. "\n"
+        content = content .. "static constexpr uint8_t kInternalBlob[] = {" .. table.concat(bytes, ", ") .. "};\n"
+        content = content .. "static constexpr size_t kInternalBlobSize = sizeof(kInternalBlob);\n"
+        content = content .. "static constexpr size_t kInternalBlobRawSize = " .. raw_size .. ";\n\n"
+        content = content .. "struct InternalBinary {\n"
+        content = content .. "    size_t dll_offset;\n"
+        content = content .. "    size_t dll_size;\n"
+        content = content .. "    size_t pdb_offset;\n"
+        content = content .. "    size_t pdb_size;\n"
+        content = content .. "};\n\n"
+        content = content .. "inline const std::map<ll::data::Version, InternalBinary> internalBinaries{\n"
+        local entry_lines = {}
+        for _, entry in ipairs(entries) do
+            table.insert(entry_lines, string.format(
+                "    {ll::data::Version{\"%s\"}, {%d, %d, %d, %d}}",
+                entry.version, entry.dll_offset, entry.dll_size, entry.pdb_offset, entry.pdb_size
+            ))
+        end
+        content = content .. table.concat(entry_lines, ",\n") .. "\n"
         content = content .. "};\n"
         content = content .. "\n} // namespace mif::ila_lseexport\n"
         if not os.isfile(outfile) or io.readfile(outfile) ~= content then
@@ -263,7 +325,7 @@ target("iListenAttentively-LseExport")
         os.rm(output_dir)
 
         os.vcp(target:targetfile(), format("%s/", output_dir))
-        os.vcp(target:symbolfile(), format("%s/", output_dir))
+        if has_config("symbols") then os.vcp(target:symbolfile(), format("%s/", output_dir)) end
         os.vcp(path.join(os.projectdir(), "assets", "*"), format("%s/", output_dir))
 
         import("scripts.generate-manifest", { rootdir = os.projectdir() }).generate_manifest(
@@ -274,6 +336,7 @@ target("iListenAttentively-LseExport")
                 author = "MiracleForest",
                 version = import("scripts.get-version-info", { rootdir = os.projectdir() }).get_version_info().version_str,
                 description = "Export events to LegacyScriptEngine",
+                passive = true,
                 dependencies = {
                     { name = "LegacyRemoteCall" }
                 },

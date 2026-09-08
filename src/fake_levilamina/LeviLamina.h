@@ -12,6 +12,17 @@
 #define LLAPI [[maybe_unused]] __declspec(dllimport)
 #endif
 
+namespace Bedrock::Memory {
+class IMemoryAllocator {
+public:
+    virtual ~IMemoryAllocator()                       = default;
+    virtual void* allocate(uint64_t)                  = 0;
+    virtual void  release(void*)                      = 0;
+    virtual void* alignedAllocate(uint64_t, uint64_t) = 0;
+    virtual void  alignedRelease(void*)               = 0;
+};
+} // namespace Bedrock::Memory
+
 namespace ll {
 
 LLAPI ll::data::Version getGameVersion();
@@ -20,6 +31,8 @@ LLAPI ll::data::Version getLoaderVersion();
 namespace memory {
 using FuncPtr = void*;
 LLAPI FuncPtr resolveSymbol(char const* symbol);
+LLAPI Bedrock::Memory::IMemoryAllocator& getDefaultAllocator();
+[[noreturn]] LLAPI void throwMemoryException(size_t);
 template <class T>
 [[nodiscard]] constexpr T& dAccess(void* ptr, ptrdiff_t off) {
     return *(T*)((uintptr_t)((uintptr_t)ptr + off));

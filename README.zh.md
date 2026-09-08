@@ -30,18 +30,3 @@ iListenAttentively.emplaceListener(
 ## 许可证
 
 版权所有 © 2024 MiracleForest，保留所有权利。
-
-<!-- 
-
-ABI 列表：
-LegacyRemoteCall v0.17.1 - 修复了内存泄漏
-LeviLamina 26.10.5 - 给 Generator 增加了 ElementsOf 功能
-
-目录列表：
-v1 - 在以上ABI之前的版本
-v2 - 修复了内存泄漏但还没给 Generator 增加 ElementsOf 功能的适配
-v3 - 修复了内存泄漏和给 Generator 增加 ElementsOf 功能的适配
-
-TODO: 重构
-
- -->

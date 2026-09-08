@@ -41,7 +41,7 @@ bool HookManager::wasOriginCalled(HookId id) const {
 }
 
 ll::Expected<HookManager::HookId> HookManager::hook(
-    std::uintptr_t           target,
+    uintptr_t           target,
     std::string              signature,
     Callback                 callback,
     ll::memory::HookPriority priority,

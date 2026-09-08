@@ -1,6 +1,7 @@
 #include "adapt/Internal.h"
 #include "adapt/utils/CompilerPredefine.h"
 #include "adapt/utils/DynamicLibrary.h"
+#include "adapt/utils/Lz4Utils.h"
 #include "adapt/utils/MemoryUtils.h"
 #include "adapt/utils/StringUtils.h"
 #include "adapt/utils/TypeName.h"
@@ -9,8 +10,9 @@
 #include <demangler/Demangle.h>
 #include <pl/Hook.h>
 #include <pl/dependency/DependencyWalker.h>
-#include <ranges>
 #include <psapi.h>
+#include <ranges>
+#include <span>
 #include <winscard.h>
 
 namespace mif::ila_lseexport {
@@ -86,6 +88,15 @@ bool main(T& self) {
     auto loaderVersion = ll::getLoaderVersion();
     self.debug("loader version: {0}", loaderVersion.to_string());
     self.debug("loader type name: {0}", ll::reflection::type_unprefix_name_v<T>);
+
+    auto pathToStr = [](std::filesystem::path const& path) {
+        return path.empty() ? std::string{"(empty)"} : string_utils::u8str2str(path.u8string());
+    };
+    auto fileSizeOf = [](std::filesystem::path const& path) {
+        std::error_code ec;
+        auto const      size = std::filesystem::file_size(path, ec);
+        return ec ? 0 : size;
+    };
     if (internalBinaries.empty()) {
         self.fatal("internalBinaries is empty");
         return false;
@@ -95,10 +106,20 @@ bool main(T& self) {
         self.fatal(
             "no embedded internal binary compatible with loader {0} (oldest embedded requires {1})",
             loaderVersion.to_string(),
-            internalBinaries.begin()->first.to_string() 
+            internalBinaries.begin()->first.to_string()
         );
         return false;
     }
+
+    auto const& info = it->second;
+    self.debug(
+        "embedded internal binary: version={0}, dll offset={1}, dll size={2}, pdb offset={3}, pdb size={4}",
+        it->first.to_string(),
+        info.dll_offset,
+        info.dll_size,
+        info.pdb_offset,
+        info.pdb_size
+    );
 
     // hack get handle
     T::getByHandle(nullptr);
@@ -112,12 +133,12 @@ bool main(T& self) {
         LPSTR  messageBuffer{nullptr};
         size_t size = FormatMessageA(
             FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL,
+            nullptr,
             errorCode,
             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             reinterpret_cast<LPSTR>(&messageBuffer),
             0,
-            NULL
+            nullptr
         );
         std::string message(messageBuffer, size);
         LocalFree(messageBuffer);
@@ -131,16 +152,65 @@ bool main(T& self) {
 
     // load internal binary
     self.debug("try loading internal built for {0}", it->first.to_string());
-    if (auto error = library.load(it->second); error) {
+    auto decompressed =
+        decompressLz4Block(std::span<uint8_t const>{kInternalBlob, kInternalBlobSize}, kInternalBlobRawSize);
+    if (!decompressed) {
+        self.fatal("failed to decompress embedded internal binary");
+        return false;
+    }
+    self.debug(
+        "blob decompressed: compressed={0} bytes, raw expected={1} bytes, actual={2} bytes",
+        kInternalBlobSize,
+        kInternalBlobRawSize,
+        decompressed->size()
+    );
+    if (info.dll_offset + info.dll_size > decompressed->size()) {
+        self.fatal("embedded dll range out of bounds for {0}", it->first.to_string());
+        return false;
+    }
+    std::span<uint8_t const> dll(decompressed->data() + info.dll_offset, info.dll_size);
+    std::span<uint8_t const> pdb{};
+    if (info.pdb_size > 0) {
+        if (info.pdb_offset + info.pdb_size > decompressed->size()) {
+            self.fatal("embedded pdb range out of bounds for {0}", it->first.to_string());
+            return false;
+        }
+        pdb = std::span<uint8_t const>{decompressed->data() + info.pdb_offset, info.pdb_size};
+    }
+    self.debug("payload slices: dll={0} bytes, pdb={1} bytes", dll.size(), pdb.size());
+    if (auto error = library.load(dll, pdb); error) {
         self.fatal("failed to load internal binary: {0}", error->what());
+        self.debug(
+            "internal dll temp path: {0} ({1} bytes)",
+            pathToStr(library.tempFile),
+            fileSizeOf(library.tempFile)
+        );
+        if (!library.pdbFile.empty()) {
+            self.debug(
+                "internal pdb temp path: {0} ({1} bytes)",
+                pathToStr(library.pdbFile),
+                fileSizeOf(library.pdbFile)
+            );
+        }
         if (!library.tempFile.empty() && (error->code().value() == 126 || error->code().value() == 127)) {
             auto result = pl::dependency_walker::pl_diagnostic_dependency_new(library.tempFile);
             self.fatal("Dependency diagnostic:");
             diagnosticDependency(self, *result);
         }
-        // clean up the temp dll left behind by the failed load
-        (void)library.free();
+        library.free();
         return false;
+    }
+    self.debug(
+        "loaded internal dll: path={0}, size={1} bytes",
+        pathToStr(library.tempFile),
+        fileSizeOf(library.tempFile)
+    );
+    if (!library.pdbFile.empty()) {
+        self.debug(
+            "loaded internal pdb: path={0}, size={1} bytes",
+            pathToStr(library.pdbFile),
+            fileSizeOf(library.pdbFile)
+        );
     }
     auto loadFunc = library.getAddress<typename T::callback_t*>("ll_mod_load");
     if (!loadFunc) {

@@ -20,10 +20,7 @@ bool LseExport::load() {
     return true;
 }
 
-bool LseExport::enable() {
-    ll::mod::NativeMod::current()->getLogger().warn("test");
-    return true;
-}
+bool LseExport::enable() { return true; }
 
 bool LseExport::disable() {
     HookManager::getInstance().unhookAll();

@@ -1,7 +1,13 @@
-#pragma once
 #include "ila-lseexport/event/LseEvent.h"
 #include <ll/api/event/Emitter.h>
-#include <mc/nbt/CompoundTag.h>
+
+#if __has_include(<mc/nbt/CompoundTagVariant.h>)
+#  include <mc/nbt/CompoundTagVariant.h>
+#elif __has_include(<mc/deps/nbt/CompoundTagVariant.h>)
+#  include <mc/deps/nbt/CompoundTagVariant.h>
+#else
+#  error "CompoundTagVariant not found"
+#endif
 
 namespace mif::ila_lseexport::event {
 
