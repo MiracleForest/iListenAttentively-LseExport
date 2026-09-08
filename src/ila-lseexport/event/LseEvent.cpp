@@ -3,7 +3,7 @@
 #include <ll/api/event/Emitter.h>
 #include <mc/nbt/CompoundTag.h>
 
-namespace ila::event {
+namespace mif::ila_lseexport::event {
 
 void LseEvent::serialize(CompoundTag& nbt) const {
     Cancellable::serialize(nbt);
@@ -28,4 +28,4 @@ CompoundTag*       LseEvent::getData() const { return mData; }
 
 class LseEventEmitter : public ll::event::Emitter<[](auto&&...) { return nullptr; }, LseEvent> {};
 
-} // namespace ila::event
+} // namespace mif::ila_lseexport::event

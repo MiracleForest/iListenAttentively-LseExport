@@ -558,6 +558,24 @@ module.exports = Object.assign(
                     pauseThread
                 );
             },
+            setInt64(address, data, pauseThread = false) {
+                return module.exports.callExportedFunction(
+                    "setInt64",
+                    false,
+                    address,
+                    normalizeInteger64(data),
+                    pauseThread
+                );
+            },
+            setUInt64(address, data, pauseThread = false) {
+                return module.exports.callExportedFunction(
+                    "setUInt64",
+                    false,
+                    address,
+                    normalizeInteger64(data),
+                    pauseThread
+                );
+            },
         };
     })(),
     ...(() => [
@@ -611,6 +629,15 @@ module.exports = Object.assign(
         "getDouble",
         "getBool",
         "getString",
+        "getStringView",
+        "getInt8",
+        "getUInt8",
+        "getInt16",
+        "getUInt16",
+        "getInt32",
+        "getUInt32",
+        "getInt64",
+        "getUInt64",
 
         "setRawAddress",
         "setInt",
@@ -624,7 +651,18 @@ module.exports = Object.assign(
         "setDouble",
         "setBool",
         "setString",
+        "setStringView",
+        "ctorString",
+        "dtorString",
+        "setInt8",
+        "setUInt8",
+        "setInt16",
+        "setUInt16",
+        "setInt32",
+        "setUInt32",
 
+        "nextHookCallbackId",
+        "markHookOriginCalled",
         "getAddressFromSymbol",
         "getAddressFromSignature",
         "getImageRange",

@@ -11,14 +11,6 @@ jobs:
 
       - uses: xmake-io/github-action-setup-xmake@v1
 
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/AppData/Local/.xmake
-          key: xmake-${{ hashFiles('xmake.lua') }}
-          restore-keys: |
-            xmake-
-
       - run: |
           xmake repo -u
 
@@ -26,7 +18,7 @@ jobs:
           xmake f -a x64 -m release -p windows -y
 
       - run: |
-          xmake -w -y
+          xmake -v -y
 
       - uses: actions/upload-artifact@v4
         with:

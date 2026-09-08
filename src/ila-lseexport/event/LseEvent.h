@@ -1,7 +1,7 @@
 #pragma once
 #include <ll/api/event/Cancellable.h>
 
-namespace ila::event {
+namespace mif::ila_lseexport::event {
 
 class LseEvent final : public ll::event::Cancellable<ll::event::Event> {
 protected:
@@ -21,4 +21,4 @@ public:
     CompoundTag*       getData() const;
 };
 
-} // namespace ila::event
+} // namespace mif::ila_lseexport::event

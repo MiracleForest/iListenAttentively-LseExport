@@ -1,0 +1,1 @@
+extern "C" __declspec(dllexport) int const ll_memory_operator_overrided{};

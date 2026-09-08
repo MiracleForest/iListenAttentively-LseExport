@@ -1,7 +1,11 @@
 #pragma once
+#include <cstddef>
 #include <ll/api/mod/NativeMod.h>
+#include <mc/platform/brstd/function_ref.h>
+#include <string>
+#include <unordered_map>
 
-namespace ila {
+namespace mif::ila_lseexport {
 
 class LseExport {
 
@@ -17,12 +21,8 @@ public:
     bool disable();
     bool unload();
 
-    void exportEventV1();
-    void registerDefaultEventsAliasV1();
-    void exportEventV2();
-    void registerDefaultEventsAliasV2();
-    void exportEventV3();
-    void registerDefaultEventsAliasV3();
+    void exportEvent();
+    void registerDefaultEventsAlias();
 
     static void modify(void* ptr, size_t length, brstd::function_ref<void()> callback, bool pauseThread = false);
 
@@ -31,4 +31,4 @@ private:
     std::unordered_map<std::string, std::string> mEventNameAlias;
 };
 
-} // namespace ila
+} // namespace mif::ila_lseexport

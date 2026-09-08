@@ -3,7 +3,7 @@
 #include <fmt/format.h>
 #include <utility>
 
-namespace ila {
+namespace mif::ila_lseexport {
 
 struct HookManager::HookData {
     HookId              mId{};
@@ -143,4 +143,4 @@ DCsigchar HookManager::dispatch(DCCallback*, DCArgs* args, DCValue* result, void
     return resultType;
 }
 
-} // namespace ila
+} // namespace mif::ila_lseexport

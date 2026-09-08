@@ -357,6 +357,8 @@ declare module "iListenAttentively" {
         asString?: TAsString
     ): number;
     export function unhook(hookId: number, suspendThreads?: boolean): boolean;
+    export function nextHookCallbackId(): number;
+    export function markHookOriginCalled(hookId: number): boolean;
     /** 推送事件 */
     export function publish(eventName: string, eventData: Record<string, any> | NbtCompound, modName?: string): void;
 
@@ -415,7 +417,7 @@ declare module "iListenAttentively" {
     /** 获取NBT地址 */
     export function getCompoundTagAddress(data: NbtCompound): number;
 
-    export function getRawAddress(address: number): number | undefined;
+    export function getRawAddress(address: number, pauseThread?: boolean): number | undefined;
     export function getLongLong(address: number, pauseThread: boolean | undefined, asString: true): string | undefined;
     export function getLongLong(address: number, pauseThread?: boolean, asString?: false): number | undefined;
     export function getUnsignedLongLong(
@@ -424,32 +426,54 @@ declare module "iListenAttentively" {
         asString: true
     ): string | undefined;
     export function getUnsignedLongLong(address: number, pauseThread?: boolean, asString?: false): number | undefined;
-    export function getInt(address: number): number | undefined;
-    export function getUnsignedInt(address: number): number | undefined;
-    export function getShort(address: number): number | undefined;
-    export function getUnsignedShort(address: number): number | undefined;
-    export function getChar(address: number): number | undefined;
-    export function getUnsignedChar(address: number): number | undefined;
-    export function getFloat(address: number): number | undefined;
-    export function getLongDouble(address: number): number | undefined;
-    export function getDouble(address: number): number | undefined;
-    export function getBool(address: number): boolean | undefined;
-    export function getString(address: number): string | undefined;
+    export function getInt(address: number, pauseThread?: boolean): number | undefined;
+    export function getUnsignedInt(address: number, pauseThread?: boolean): number | undefined;
+    export function getShort(address: number, pauseThread?: boolean): number | undefined;
+    export function getUnsignedShort(address: number, pauseThread?: boolean): number | undefined;
+    export function getChar(address: number, pauseThread?: boolean): number | undefined;
+    export function getUnsignedChar(address: number, pauseThread?: boolean): number | undefined;
+    export function getFloat(address: number, pauseThread?: boolean): number | undefined;
+    export function getLongDouble(address: number, pauseThread?: boolean): number | undefined;
+    export function getDouble(address: number, pauseThread?: boolean): number | undefined;
+    export function getBool(address: number, pauseThread?: boolean): boolean | undefined;
+    export function getInt8(address: number, pauseThread?: boolean): number | undefined;
+    export function getUInt8(address: number, pauseThread?: boolean): number | undefined;
+    export function getInt16(address: number, pauseThread?: boolean): number | undefined;
+    export function getUInt16(address: number, pauseThread?: boolean): number | undefined;
+    export function getInt32(address: number, pauseThread?: boolean): number | undefined;
+    export function getUInt32(address: number, pauseThread?: boolean): number | undefined;
+    export function getInt64(address: number, pauseThread: boolean | undefined, asString: true): string | undefined;
+    export function getInt64(address: number, pauseThread?: boolean, asString?: false): number | undefined;
+    export function getUInt64(address: number, pauseThread: boolean | undefined, asString: true): string | undefined;
+    export function getUInt64(address: number, pauseThread?: boolean, asString?: false): number | undefined;
+    export function getString(address: number, base64?: boolean, pauseThread?: boolean): string | undefined;
+    export function getStringView(address: number, base64?: boolean, pauseThread?: boolean): string | undefined;
 
-    export function setRawAddress(address: number, data: number): void;
-    export function setLongLong(address: number, data: bigint | number, pauseThread?: boolean): void;
-    export function setUnsignedLongLong(address: number, data: bigint | number, pauseThread?: boolean): void;
-    export function setInt(address: number, data: number): void;
-    export function setUnsignedInt(address: number, data: number): void;
-    export function setShort(address: number, data: number): void;
-    export function setUnsignedShort(address: number, data: number): void;
-    export function setChar(address: number, data: number): void;
-    export function setUnsignedChar(address: number, data: number): void;
-    export function setFloat(address: number, data: number): void;
-    export function setLongDouble(address: number, data: number): void;
-    export function setDouble(address: number, data: number): void;
-    export function setBool(address: number, data: boolean): void;
-    export function setString(address: number, data: string): void;
+    export function setRawAddress(address: number, data: number, pauseThread?: boolean): void;
+    export function setLongLong(address: number, data: bigint | number | string, pauseThread?: boolean): void;
+    export function setUnsignedLongLong(address: number, data: bigint | number | string, pauseThread?: boolean): void;
+    export function setInt(address: number, data: number, pauseThread?: boolean): void;
+    export function setUnsignedInt(address: number, data: number, pauseThread?: boolean): void;
+    export function setShort(address: number, data: number, pauseThread?: boolean): void;
+    export function setUnsignedShort(address: number, data: number, pauseThread?: boolean): void;
+    export function setChar(address: number, data: number, pauseThread?: boolean): void;
+    export function setUnsignedChar(address: number, data: number, pauseThread?: boolean): void;
+    export function setFloat(address: number, data: number, pauseThread?: boolean): void;
+    export function setLongDouble(address: number, data: number, pauseThread?: boolean): void;
+    export function setDouble(address: number, data: number, pauseThread?: boolean): void;
+    export function setBool(address: number, data: boolean, pauseThread?: boolean): void;
+    export function setInt8(address: number, data: number, pauseThread?: boolean): void;
+    export function setUInt8(address: number, data: number, pauseThread?: boolean): void;
+    export function setInt16(address: number, data: number, pauseThread?: boolean): void;
+    export function setUInt16(address: number, data: number, pauseThread?: boolean): void;
+    export function setInt32(address: number, data: number, pauseThread?: boolean): void;
+    export function setUInt32(address: number, data: number, pauseThread?: boolean): void;
+    export function setInt64(address: number, data: bigint | number | string, pauseThread?: boolean): void;
+    export function setUInt64(address: number, data: bigint | number | string, pauseThread?: boolean): void;
+    export function setString(address: number, data: string, base64?: boolean, pauseThread?: boolean): void;
+    export function setStringView(address: number, sourceAddress: number, pauseThread?: boolean): void;
+    export function ctorString(address: number, value?: string, base64?: boolean): void;
+    export function dtorString(address: number): void;
 
     export function getAddressFromSymbol(symbol: string): number;
     export function getAddressFromSymbol(dllNmae: string, symbol: string): number;
@@ -472,10 +496,10 @@ declare module "iListenAttentively" {
     export function alignedMallocMemory(size: number, alignment: number): number;
     export function alignedFreeMemory(address: number): void;
     export function getUsableMemorySize(address: number): number;
-    export function memcpyMemory(dest: number, src: number, size: number): void;
-    export function memsetMemory(dest: number, value: number, size: number): void;
-    export function memcmpMemory(dest: number, src: number, size: number): number;
-    export function memmoveMemory(dest: number, src: number, size: number): number;
+    export function memcpyMemory(dest: number, src: number, size: number, pauseThread?: boolean): void;
+    export function memsetMemory(dest: number, value: number, size: number, pauseThread?: boolean): void;
+    export function memcmpMemory(dest: number, src: number, size: number, pauseThread?: boolean): number;
+    export function memmoveMemory(dest: number, src: number, size: number, pauseThread?: boolean): void;
 
     export default undefined;
 }

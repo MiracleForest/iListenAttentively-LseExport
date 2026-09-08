@@ -8,7 +8,7 @@
 #include <memory>
 #include <string>
 
-namespace ila {
+namespace mif::ila_lseexport {
 
 class HookManager {
 public:
@@ -47,4 +47,4 @@ private:
     void             collectRemoved();
 };
 
-} // namespace ila
+} // namespace mif::ila_lseexport
