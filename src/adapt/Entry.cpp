@@ -75,12 +75,12 @@ void diagnosticDependency(T& self, pl::dependency_walker::DependencyIssueItem co
 }
 
 template <typename T>
-std::shared_ptr<T> (*originCurrentFunc)(void*);
+std::shared_ptr<T> (*origingetByHandleFunc)(void*);
 
 template <typename T>
-__declspec(noinline) std::shared_ptr<T> current(void* handle) {
-    return library.handle() == handle ? originCurrentFunc<T>(internal::getCurrentModuleHandle())
-                                      : originCurrentFunc<T>(handle);
+__declspec(noinline) std::shared_ptr<T> getByHandleDetour(void* handle) {
+    return library.handle() == handle ? origingetByHandleFunc<T>(internal::getCurrentModuleHandle())
+                                      : origingetByHandleFunc<T>(handle);
 }
 
 template <typename T>
@@ -125,8 +125,8 @@ bool main(T& self) {
     T::getByHandle(nullptr);
     if (auto errorCode = pl::pl_hook(
             memory_utils::toFuncPtr(&T::getByHandle),
-            memory_utils::toFuncPtr(&current<T>),
-            reinterpret_cast<memory_utils::FuncPtr*>(&originCurrentFunc<T>),
+            memory_utils::toFuncPtr(&getByHandleDetour<T>),
+            reinterpret_cast<memory_utils::FuncPtr*>(&origingetByHandleFunc<T>),
             pl::PriorityNormal
         );
         errorCode != 0) {
@@ -147,7 +147,7 @@ bool main(T& self) {
         return false;
     }
     static struct Guard {
-        ~Guard() { pl::pl_unhook(memory_utils::toFuncPtr(&T::getByHandle), memory_utils::toFuncPtr(&current<T>)); }
+        ~Guard() { pl::pl_unhook(memory_utils::toFuncPtr(&T::getByHandle), memory_utils::toFuncPtr(&getByHandleDetour<T>)); }
     } guard;
 
     // load internal binary

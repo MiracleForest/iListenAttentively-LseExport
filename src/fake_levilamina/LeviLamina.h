@@ -1,5 +1,4 @@
 #pragma once
-#include "Version.h"
 #include "fake_levilamina/Version.h"
 #include <format>
 #include <fstream>
@@ -33,15 +32,6 @@ using FuncPtr = void*;
 LLAPI FuncPtr resolveSymbol(char const* symbol);
 LLAPI Bedrock::Memory::IMemoryAllocator& getDefaultAllocator();
 [[noreturn]] LLAPI void throwMemoryException(size_t);
-template <class T>
-[[nodiscard]] constexpr T& dAccess(void* ptr, ptrdiff_t off) {
-    return *(T*)((uintptr_t)((uintptr_t)ptr + off));
-}
-
-template <class T>
-[[nodiscard]] constexpr T const& dAccess(void const* ptr, ptrdiff_t off) {
-    return *(T*)((uintptr_t)((uintptr_t)ptr + off));
-}
 } // namespace memory
 
 class OutputStream {
@@ -113,18 +103,16 @@ public:
     LLAPI void onEnable(CallbackFn) noexcept;
     LLAPI void onDisable(CallbackFn) noexcept;
 
-    LLAPI io::Logger& getLogger() const;
+    LLAPI Logger& getLogger() const;
 
     template <typename... Args>
     void fatal(std::format_string<Args...> fmt, Args&&... args) const {
-        ll::memory::dAccess<Logger>(ll::memory::dAccess<void*>(this, 0), 640)
-            .fatal(std::vformat(fmt.get(), std::make_format_args(args...)));
+        getLogger().fatal(std::vformat(fmt.get(), std::make_format_args(args...)));
     }
 
     template <typename... Args>
     void debug(std::format_string<Args...> fmt, Args&&... args) const {
-        ll::memory::dAccess<Logger>(ll::memory::dAccess<void*>(this, 0), 640)
-            .debug(std::vformat(fmt.get(), std::make_format_args(args...)));
+        getLogger().debug(std::vformat(fmt.get(), std::make_format_args(args...)));
     }
 };
 class NativePlugin : public Plugin {

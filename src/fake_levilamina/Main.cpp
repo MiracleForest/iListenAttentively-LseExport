@@ -9,7 +9,8 @@ class MemoryAllocator : public Bedrock::Memory::IMemoryAllocator {
     void  alignedRelease(void*) override {}
 };
 
-static io::Logger      logger;
+static Logger          logger1;
+static io::Logger      logger2;
 static MemoryAllocator allocator;
 
 void ll::OutputStream::print(std::string_view) const noexcept {}
@@ -22,7 +23,7 @@ void                          Plugin::onLoad(CallbackFn) noexcept {}
 void                          Plugin::onUnload(CallbackFn) noexcept {}
 void                          Plugin::onEnable(CallbackFn) noexcept {}
 void                          Plugin::onDisable(CallbackFn) noexcept {}
-io::Logger&                   Plugin::getLogger() const { return logger; }
+Logger&                       Plugin::getLogger() const { return logger1; }
 std::shared_ptr<NativePlugin> NativePlugin::getByHandle(void*) { return {}; }
 } // namespace plugin
 namespace mod {
@@ -30,7 +31,7 @@ void                       Mod::onLoad(CallbackFn) noexcept {}
 void                       Mod::onUnload(CallbackFn) noexcept {}
 void                       Mod::onEnable(CallbackFn) noexcept {}
 void                       Mod::onDisable(CallbackFn) noexcept {}
-io::Logger&                Mod::getLogger() const { return logger; }
+io::Logger&                Mod::getLogger() const { return logger2; }
 std::shared_ptr<NativeMod> NativeMod::getByHandle(void*) { return {}; }
 } // namespace mod
 namespace memory {
